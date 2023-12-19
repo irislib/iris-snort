@@ -64,6 +64,9 @@ import { setupWebLNWalletConfig } from "@/Wallet/WebLN";
 import { Wallets } from "@/Wallet";
 import Fuse from "fuse.js";
 import NetworkGraph from "@/Pages/NetworkGraph";
+import EventDB from "@/Cache/EventDB";
+
+console.log('EventDB', EventDB);
 
 declare global {
   interface Window {
@@ -136,6 +139,7 @@ const profileTimestamps = new Map<string, number>();
 
 // how to also add entries from ProfileCache?
 System.on("event", ev => {
+  EventDB.insert(ev);
   if (ev.kind === 0) {
     const existing = profileTimestamps.get(ev.pubkey);
     if (existing) {
