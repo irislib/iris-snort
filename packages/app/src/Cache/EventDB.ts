@@ -52,14 +52,12 @@ export class EventDB {
         this.idb = new MyDexie();
       }
       this.idb?.events
-        .orderBy("created_at")
-        .reverse()
+        .where("kind")
+        .anyOf([0, 3]) // load social graph and profiles. TODO: load other stuff on request
         .each(event => {
           this.insert(event, false);
-          if ([0, 3].includes(event.kind)) {
-            this.seen.add(ID(event.id));
-            System.HandleEvent(event, { skipVerify: true }); // goes to SocialGraph and profile search
-          }
+          this.seen.add(ID(event.id));
+          System.HandleEvent(event, { skipVerify: true });
         });
     } catch (e) {
       console.error(e);
