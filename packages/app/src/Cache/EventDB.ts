@@ -1,35 +1,45 @@
-import loki from 'lokijs';
-import IncrementalIndexedDBAdapter from 'lokijs/src/incremental-indexeddb-adapter.js'
-import {ID, STR, TaggedNostrEvent, ReqFilter as Filter} from "@snort/system";
+import loki from "lokijs";
+import { ID, STR, TaggedNostrEvent, ReqFilter as Filter } from "@snort/system";
+import Dexie, { Table } from "dexie";
+
+type Tag = {
+  id: string;
+  eventId: string;
+  type: string;
+  value: string;
+};
+
+class MyDexie extends Dexie {
+  events!: Table<TaggedNostrEvent>;
+  tags!: Table<Tag>;
+
+  constructor() {
+    super("EventDB");
+
+    this.version(5).stores({
+      events: "id, pubkey, kind, created_at, [pubkey+kind]",
+      tags: "id, eventId, [type+value]",
+    });
+  }
+}
 
 export class EventDB {
-  private db: any;
+  private loki = new loki("EventDB");
+  private idb = new MyDexie();
   private eventsCollection: any;
 
   constructor() {
-    this.db = new loki('EventDB', {
-      adapter: new IncrementalIndexedDBAdapter(),
-      autoload: true,
-      autoloadCallback: this.init.bind(this),
-      autosave: true,
-      autosaveInterval: 4000,
+    this.eventsCollection = this.loki.addCollection("events", {
+      unique: ["id"],
+      indices: ["pubkey", "kind", "flatTags", "created_at"],
+    });
+    this.idb.events.each(event => {
+      this.eventsCollection.insert(event, false);
     });
   }
 
-  init() {
-    console.log('EventDB ready');
-    if (!this.db.getCollection('events')) {
-      this.eventsCollection = this.db.addCollection('events', {
-        unique: ['id'],
-        indices: ['pubkey', 'kind', 'flatTags', 'created_at'],
-      });
-    } else {
-      this.eventsCollection = this.db.getCollection('events');
-    }
-  }
-
   get(id: any): TaggedNostrEvent | undefined {
-    const event = this.eventsCollection?.by('id', ID(id)); // throw if db not ready yet?
+    const event = this.eventsCollection.by("id", ID(id)); // throw if db not ready yet?
     if (event) {
       return this.unpack(event);
     }
@@ -38,8 +48,8 @@ export class EventDB {
   // map to internal UIDs to save memory
   private pack(event: TaggedNostrEvent) {
     const clone: any = { ...event };
-    clone.tags = event.tags.map((tag) => {
-      if (['e', 'p'].includes(tag[0])) {
+    clone.tags = event.tags.map(tag => {
+      if (["e", "p"].includes(tag[0])) {
         return [tag[0], ID(tag[1])];
       } else {
         return tag;
@@ -57,8 +67,8 @@ export class EventDB {
     delete original.meta;
 
     // Convert every ID back to original tag[1], tag[2], ...
-    original.tags = packedEvent.tags.map((tag) => {
-      if (['e', 'p'].includes(tag[0])) {
+    original.tags = packedEvent.tags.map(tag => {
+      if (["e", "p"].includes(tag[0])) {
         return [tag[0], STR(tag[1])];
       } else {
         return tag;
@@ -70,20 +80,26 @@ export class EventDB {
     return original as TaggedNostrEvent;
   }
 
-  insert(event: TaggedNostrEvent): boolean {
+  insert(event: TaggedNostrEvent, saveToIdb = true): boolean {
     if (!event || !event.id || !event.created_at) {
-      throw new Error('Invalid event');
+      throw new Error("Invalid event");
+    }
+
+    if (this.eventsCollection.by("id", ID(event.id))) {
+      return false;
     }
 
     const clone = this.pack(event);
-    const flatTags = clone.tags
-      .filter((tag) => ['e', 'p', 'd'].includes(tag[0]))
-      .map((tag) => tag.join('_'));
+    const flatTags = clone.tags.filter(tag => ["e", "p", "d"].includes(tag[0])).map(tag => tag.join("_"));
 
     try {
       this.eventsCollection.insert({ ...clone, flatTags });
     } catch (e) {
       return false;
+    }
+
+    if (saveToIdb) {
+      this.idb.events.put(event); // TODO bulk
     }
 
     return true;
@@ -92,10 +108,11 @@ export class EventDB {
   remove(eventId: string): void {
     const id = ID(eventId);
     this.eventsCollection.findAndRemove({ id });
+    this.idb.events.where({ id }).delete();
   }
 
   find(filter: Filter, callback: (event: TaggedNostrEvent) => void): void {
-    this.findArray(filter).forEach((event) => {
+    this.findArray(filter).forEach(event => {
       callback(event);
     });
   }
@@ -112,13 +129,13 @@ export class EventDB {
         }
         return true;
       })
-      .simplesort('created_at', true);
+      .simplesort("created_at", true);
 
     if (filter.limit) {
       chain = chain.limit(filter.limit);
     }
 
-    return chain.data().map((e) => this.unpack(e));
+    return chain.data().map(e => this.unpack(e));
   }
 
   findAndRemove(filter: Filter) {
@@ -138,12 +155,12 @@ export class EventDB {
       if (filter.kinds) {
         query.kind = { $in: filter.kinds };
       }
-      if (filter['#e']) {
-        query.flatTags = { $contains: 'e_' + filter['#e'].map(ID) };
-      } else if (filter['#p']) {
-        query.flatTags = { $contains: 'p_' + filter['#p'].map(ID) };
-      } else if (filter['#d']) {
-        query.flatTags = { $contains: 'd_' + filter['#d'].map(ID) };
+      if (filter["#e"]) {
+        query.flatTags = { $contains: "e_" + filter["#e"].map(ID) };
+      } else if (filter["#p"]) {
+        query.flatTags = { $contains: "p_" + filter["#p"].map(ID) };
+      } else if (filter["#d"]) {
+        query.flatTags = { $contains: "d_" + filter["#d"].map(ID) };
       }
       if (filter.since && filter.until) {
         query.created_at = { $between: [filter.since, filter.until] };

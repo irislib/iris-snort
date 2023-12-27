@@ -66,7 +66,7 @@ import Fuse from "fuse.js";
 import NetworkGraph from "@/Pages/NetworkGraph";
 import EventDB from "@/Cache/EventDB";
 
-console.log('EventDB', EventDB);
+console.log("EventDB", EventDB);
 
 declare global {
   interface Window {
