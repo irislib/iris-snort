@@ -67,7 +67,7 @@ export default function TrendingNotes({ count = Infinity, small = false }) {
       ) : (
         <Note
           key={e.id}
-          data={e as TaggedNostrEvent}
+          id={e.id}
           related={related?.data ?? []}
           depth={0}
           options={{

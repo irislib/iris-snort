@@ -32,7 +32,7 @@ export function TimelineFragment(props: TimelineFragProps) {
         e =>
           props.noteRenderer?.(e) ?? (
             <Note
-              data={e}
+              id={e.id}
               related={relatedFeed(e.id)}
               key={e.id}
               depth={0}

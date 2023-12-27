@@ -47,7 +47,7 @@ const Subthread = ({ active, notes, related, chains, onNavigate }: SubthreadProp
           <Note
             highlight={active === a.id}
             className={`thread-note ${isLastSubthread && replies.length === 0 ? "is-last-note" : ""}`}
-            data={a}
+            id={a.id}
             key={a.id}
             related={related}
             onClick={onNavigate}
@@ -95,7 +95,7 @@ const ThreadNote = ({ active, note, isLast, isLastSubthread, related, chains, on
         <Note
           highlight={active === note.id}
           className={classNames("thread-note", { "is-last-note": isLastVisibleNote })}
-          data={note}
+          id={note.id}
           key={note.id}
           related={related}
           onClick={onNavigate}
@@ -169,7 +169,7 @@ const TierThree = ({ active, isLastSubthread, notes, related, chains, onNavigate
         <Note
           highlight={active === first.id}
           className={classNames("thread-note", { "is-last-note": isLastSubthread && isLast })}
-          data={first}
+          id={first.id}
           key={first.id}
           related={related}
           threadChains={chains}
@@ -203,7 +203,7 @@ const TierThree = ({ active, isLastSubthread, notes, related, chains, onNavigate
             <Note
               className={classNames("thread-note", { "is-last-note": lastNote })}
               highlight={active === r.id}
-              data={r}
+              id={r.id}
               key={r.id}
               related={related}
               onClick={onNavigate}
