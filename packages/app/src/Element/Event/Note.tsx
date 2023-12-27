@@ -30,6 +30,7 @@ export interface NoteProps {
     showHeader?: boolean;
     showContextMenu?: boolean;
     showProfileCard?: boolean;
+    standalone?: boolean;
     showTime?: boolean;
     showPinned?: boolean;
     showBookmarked?: boolean;
@@ -100,5 +101,19 @@ export default function Note(props: NoteProps) {
       content = <NoteInner {...props} data={ev} />;
   }
 
-  return <ErrorBoundary>{content}</ErrorBoundary>;
+  content = <ErrorBoundary>{content}</ErrorBoundary>;
+
+  if (props.options?.standalone) {
+    const replies = EventDB.findArray({ kinds: [1], "#e": [ev.id] });
+    return (
+      <>
+        {content}
+        {replies.map(reply => (
+          <Note key={reply.id} data={reply} related={[]} />
+        ))}
+      </>
+    );
+  }
+
+  return content;
 }

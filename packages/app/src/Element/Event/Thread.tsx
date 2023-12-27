@@ -10,7 +10,7 @@ import BackButton from "@/Element/Button/BackButton";
 import Note from "@/Element/Event/Note";
 import NoteGhost from "@/Element/Event/NoteGhost";
 import Collapsed from "@/Element/Collapsed";
-import { ThreadContext, ThreadContextWrapper, chainKey } from "@/Hooks/useThreadContext";
+import { ThreadContext, chainKey } from "@/Hooks/useThreadContext";
 
 import messages from "../messages";
 
@@ -223,9 +223,12 @@ export function ThreadRoute({ id }: { id?: string }) {
   const link = parseNostrLink(resolvedId ?? "", NostrPrefix.Note);
 
   return (
-    <ThreadContextWrapper link={link}>
-      <Thread />
-    </ThreadContextWrapper>
+    <Note
+      id={link.id}
+      related={[]}
+      options={{ showReactionsLink: true, showMediaSpotlight: true, standalone: true }}
+      threadChains={new Map()}
+    />
   );
 }
 

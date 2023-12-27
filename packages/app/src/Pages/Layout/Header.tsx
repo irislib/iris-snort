@@ -1,16 +1,16 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useMemo } from "react";
 import classNames from "classnames";
 import { LogoHeader } from "@/Pages/Layout/LogoHeader";
 import { rootTabItems, RootTabs } from "@/Element/Feed/RootTabs";
 import NotificationsHeader from "@/Pages/Layout/NotificationsHeader";
 import { NostrLink, NostrPrefix, parseNostrLink } from "@snort/system";
 import { bech32ToHex } from "@/SnortUtils";
-import { useEventFeed } from "@snort/system-react";
 import { FormattedMessage } from "react-intl";
 import DisplayName from "@/Element/User/DisplayName";
 import useLogin from "@/Hooks/useLogin";
 import Icon from "@/Icons/Icon";
+import EventDB from "@/Cache/EventDB";
 
 export function Header() {
   const navigate = useNavigate();
@@ -99,9 +99,10 @@ export function Header() {
 }
 
 function NoteTitle({ link }: { link: NostrLink }) {
-  const ev = useEventFeed(link);
+  const ev = EventDB.get(link.id);
+  const pubkey = ev?.pubkey;
 
-  if (!ev.data?.pubkey) {
+  if (!pubkey) {
     return <FormattedMessage defaultMessage="Note" id="qMePPG" />;
   }
 
@@ -110,7 +111,7 @@ function NoteTitle({ link }: { link: NostrLink }) {
       <FormattedMessage
         defaultMessage="Note by {name}"
         id="ALdW69"
-        values={{ name: <DisplayName pubkey={ev.data.pubkey} /> }}
+        values={{ name: <DisplayName pubkey={pubkey} /> }}
       />
     </>
   );

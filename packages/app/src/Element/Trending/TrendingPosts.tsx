@@ -15,7 +15,7 @@ import ImageGridItem from "@/Element/Feed/ImageGridItem";
 import { SpotlightThreadModal } from "@/Element/Spotlight/SpotlightThreadModal";
 import useLogin from "@/Hooks/useLogin";
 import useCachedFetch from "@/Hooks/useCachedFetch";
-import {System} from "@/index";
+import { System } from "@/index";
 
 export default function TrendingNotes({ count = Infinity, small = false }) {
   const api = new NostrBandApi();
