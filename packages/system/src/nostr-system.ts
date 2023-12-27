@@ -191,18 +191,20 @@ export class NostrSystem extends EventEmitter<NostrSystemEvents> implements Syst
     }
   }
 
-  #onEvent(sub: string, ev: TaggedNostrEvent) {
+  #onEvent(sub: string, ev: TaggedNostrEvent, opts?: { skipVerify?: boolean }) {
     ev.relays?.length && this.#relayMetrics.onEvent(ev.relays[0]);
 
-    if (!EventExt.isValid(ev)) {
-      this.#log("Rejecting invalid event %O", ev);
-      return;
-    }
-    if (this.checkSigs) {
-      const id = EventExt.createId(ev);
-      if (!this.#queryOptimizer.schnorrVerify(id, ev.sig, ev.pubkey)) {
-        this.#log("Invalid sig %O", ev);
+    if (!opts?.skipVerify) {
+      if (!EventExt.isValid(ev)) {
+        this.#log("Rejecting invalid event %O", ev);
         return;
+      }
+      if (this.checkSigs) {
+        const id = EventExt.createId(ev);
+        if (!this.#queryOptimizer.schnorrVerify(id, ev.sig, ev.pubkey)) {
+          this.#log("Invalid sig %O", ev);
+          return;
+        }
       }
     }
 
@@ -387,8 +389,8 @@ export class NostrSystem extends EventEmitter<NostrSystemEvents> implements Syst
     return [];
   }
 
-  HandleEvent(ev: TaggedNostrEvent) {
-    this.#onEvent("*", ev);
+  HandleEvent(ev: TaggedNostrEvent, opts?: { skipVerify?: boolean }) {
+    this.#onEvent("*", ev, opts);
   }
 
   /**

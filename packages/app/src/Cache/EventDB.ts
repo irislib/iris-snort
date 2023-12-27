@@ -40,6 +40,7 @@ export class EventDB {
   private loki = new loki("EventDB");
   private idb: MyDexie | null = null;
   private eventsCollection: Collection<PackedNostrEvent>;
+  private seen = new Set<UID>();
 
   constructor() {
     this.eventsCollection = this.loki.addCollection("events", {
@@ -53,7 +54,8 @@ export class EventDB {
       this.idb?.events.each(event => {
         this.insert(event, false);
         if ([0, 3].includes(event.kind)) {
-          System.HandleEvent(event); // goes to SocialGraph and profile search
+          this.seen.add(ID(event.id));
+          System.HandleEvent(event, { skipVerify: true }); // goes to SocialGraph and profile search
         }
       });
     } catch (e) {
@@ -121,19 +123,22 @@ export class EventDB {
       throw new Error("Invalid event");
     }
 
-    if (this.eventsCollection.by("id", ID(event.id))) {
+    const id = ID(event.id);
+    if (this.eventsCollection.by("id", id) || this.seen.has(id)) {
       return false; // this prevents updating event.relays?
     }
 
     const packed = this.pack(event);
 
     if (![0, 3].includes(event.kind)) {
-      // these are not needed in memory
+      // [0, 3] are not needed in memory
       try {
         this.eventsCollection.insert(packed);
       } catch (e) {
         return false;
       }
+    } else {
+      this.seen.add(id);
     }
 
     if (saveToIdb && this.idb) {
