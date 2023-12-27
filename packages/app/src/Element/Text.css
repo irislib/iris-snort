@@ -1,6 +1,5 @@
 .text {
-  font-size: var(--font-size);
-  line-height: 24px;
+  line-height: 1.6;
 }
 
 .text .text-frag {

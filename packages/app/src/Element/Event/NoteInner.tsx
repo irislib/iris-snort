@@ -368,7 +368,7 @@ export function NoteInner(props: NoteProps) {
             </div>
           </div>
         )}
-        <div className="body" onClick={e => goToEvent(e, ev, true)}>
+        <div className={classNames("body", { "text-lg": opt?.isRoot })} onClick={e => goToEvent(e, ev, true)}>
           {transformBody()}
           {translation()}
           {pollOptions()}

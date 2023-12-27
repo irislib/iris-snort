@@ -42,7 +42,7 @@ export function SpotlightThreadModal(props: SpotlightThreadModalProps) {
           <SpotlightFromEvent event={event} onClose={onClose} onNext={props.onNext} onPrev={props.onPrev} />
         </div>
         <div className="hidden md:flex w-1/3 min-w-[400px] flex-shrink-0 overflow-y-auto bg-bg-color">
-          <Note id={link?.id} options={{ standalone: true }} />
+          <Note id={link?.id} options={{ isRoot: true }} />
         </div>
       </div>
     </Modal>

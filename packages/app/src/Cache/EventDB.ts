@@ -37,7 +37,7 @@ type PackedNostrEvent = {
 
 export class EventDB {
   private loki = new loki("EventDB");
-  private idb = new MyDexie();
+  private idb: MyDexie | null = null;
   private eventsCollection: Collection<PackedNostrEvent>;
 
   constructor() {
@@ -45,9 +45,24 @@ export class EventDB {
       unique: ["id"],
       indices: ["pubkey", "kind", "flatTags", "created_at"],
     });
-    this.idb.events.each(event => {
-      this.insert(event, false);
-    });
+    try {
+      if (this.hasIndexedDB()) {
+        this.idb = new MyDexie();
+      }
+      this.idb?.events.each(event => {
+        this.insert(event, false);
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  private hasIndexedDB(): boolean {
+    try {
+      return !!window.indexedDB;
+    } catch (e) {
+      return false;
+    }
   }
 
   get(id: string): TaggedNostrEvent | undefined {
@@ -114,8 +129,12 @@ export class EventDB {
       return false;
     }
 
-    if (saveToIdb) {
-      this.idb.events.put(event); // TODO bulk
+    if (saveToIdb && this.idb) {
+      try {
+        this.idb.events.put(event); // TODO bulk
+      } catch (e) {
+        console.error(e);
+      }
     }
 
     return true;
@@ -124,7 +143,13 @@ export class EventDB {
   remove(eventId: string): void {
     const id = ID(eventId);
     this.eventsCollection.findAndRemove({ id });
-    this.idb.events.where({ id }).delete();
+    if (this.idb) {
+      try {
+        this.idb.events.where({ id: eventId }).delete();
+      } catch (e) {
+        console.error(e);
+      }
+    }
   }
 
   find(filter: Filter, callback: (event: TaggedNostrEvent) => void): void {

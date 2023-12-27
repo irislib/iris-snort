@@ -11,7 +11,7 @@ export function ThreadRoute({ id }: { id?: string }) {
     <Note
       id={link.id}
       related={[]}
-      options={{ showReactionsLink: true, showMediaSpotlight: true, standalone: true }}
+      options={{ showReactionsLink: true, showMediaSpotlight: true, isRoot: true }}
       threadChains={new Map()}
     />
   );
