@@ -1,16 +1,15 @@
 import "./Timeline.css";
-import { ReactNode, useCallback, useContext, useMemo, useState, useSyncExternalStore } from "react";
+import { ReactNode, useCallback, useContext, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { EventKind, NostrEvent, NostrLink, TaggedNostrEvent } from "@snort/system";
 import { unixNow } from "@snort/shared";
 import { SnortContext, useReactions } from "@snort/system-react";
 
-import { dedupeByPubkey, findTag, orderDescending } from "@/SnortUtils";
+import { dedupeByPubkey, findTag } from "@/SnortUtils";
 import useModeration from "@/Hooks/useModeration";
 import { FollowsFeed } from "@/Cache";
 import { LiveStreams } from "@/Element/LiveStreams";
 import useLogin from "@/Hooks/useLogin";
-import useHashtagsFeed from "@/Feed/HashtagsFeed";
 import { ShowMoreInView } from "@/Element/Event/ShowMore";
 import { TimelineRenderer } from "@/Element/Feed/TimelineRenderer";
 import { DisplayAs, DisplayAsSelector } from "@/Element/Feed/DisplayAsSelector";
@@ -34,10 +33,7 @@ const TimelineFollows = (props: TimelineFollowsProps) => {
   const displayAsInitial = props.displayAs ?? login.feedDisplayAs ?? "list";
   const [displayAs, setDisplayAs] = useState<DisplayAs>(displayAsInitial);
   const [latest, setLatest] = useState(unixNow());
-  const feed = useSyncExternalStore(
-    cb => FollowsFeed.hook(cb, "*"),
-    () => FollowsFeed.snapshot(),
-  );
+  const feed = EventDB.findArray({ kinds: [1], authors: login.follows.item, limit: 100, until: latest });
   const reactions = useReactions(
     "follows-feed-reactions",
     feed.map(a => NostrLink.fromEvent(a)),
@@ -47,8 +43,7 @@ const TimelineFollows = (props: TimelineFollowsProps) => {
   const system = useContext(SnortContext);
   const { muted, isEventMuted } = useModeration();
 
-  const sortedFeed = useMemo(() => orderDescending(feed), [feed]);
-  const oldest = useMemo(() => sortedFeed.at(-1)?.created_at, [sortedFeed]);
+  const oldest = useMemo(() => feed.at(-1)?.created_at, [feed]);
 
   const postsOnly = useCallback(
     (a: NostrEvent) => (props.postsOnly ? !a.tags.some(b => b[0] === "e" || b[0] === "a") : true),
@@ -65,17 +60,17 @@ const TimelineFollows = (props: TimelineFollowsProps) => {
     [postsOnly, muted, login.follows.timestamp],
   );
 
-  const mixin = useHashtagsFeed();
+  // const mixin = useHashtagsFeed();
   const mainFeed = useMemo(() => {
-    return filterPosts((sortedFeed ?? []).filter(a => a.created_at <= latest));
-  }, [sortedFeed, filterPosts, latest, login.follows.timestamp]);
+    return filterPosts((feed ?? []).filter(a => a.created_at <= latest));
+  }, [feed, filterPosts, latest, login.follows.timestamp]);
 
+  /* TODO add hashtags back
   const findHashTagContext = (a: NostrEvent) => {
     const tag = a.tags.filter(a => a[0] === "t").find(a => login.tags.item.includes(a[1].toLowerCase()))?.[1];
     return tag;
   };
 
-  /* TODO add hashtags back
   const mixinFiltered = useMemo(() => {
     const mainFeedIds = new Set(mainFeed.map(a => a.id));
     return (mixin.data.data ?? [])
@@ -94,15 +89,15 @@ const TimelineFollows = (props: TimelineFollowsProps) => {
    */
 
   const latestFeed = useMemo(() => {
-    return filterPosts((sortedFeed ?? []).filter(a => a.created_at > latest));
-  }, [sortedFeed, latest]);
+    return filterPosts((feed ?? []).filter(a => a.created_at > latest));
+  }, [feed, latest]);
 
   const liveStreams = useMemo(() => {
-    return (sortedFeed ?? []).filter(a => a.kind === EventKind.LiveEvent && findTag(a, "status") === "live");
-  }, [sortedFeed]);
+    return (feed ?? []).filter(a => a.kind === EventKind.LiveEvent && findTag(a, "status") === "live");
+  }, [feed]);
 
   const latestAuthors = useMemo(() => {
-    return dedupeByPubkey(latestFeed).map(e => e.pubkey);
+    return dedupeByPubkey(feed).map(e => e.pubkey);
   }, [latestFeed]);
 
   function onShowLatest(scrollToTop = false) {
@@ -111,8 +106,6 @@ const TimelineFollows = (props: TimelineFollowsProps) => {
       window.scrollTo(0, 0);
     }
   }
-
-  const events = EventDB.findArray({ kinds: [1], authors: login.follows.item, limit: 100, until: latest });
 
   return (
     <>
@@ -123,7 +116,7 @@ const TimelineFollows = (props: TimelineFollowsProps) => {
         onSelect={(displayAs: DisplayAs) => setDisplayAs(displayAs)}
       />
       <TimelineRenderer
-        frags={[{ events, refTime: latest }]}
+        frags={[{ events: mainFeed, refTime: latest }]}
         related={reactions.data ?? []}
         latest={latestAuthors}
         showLatest={t => onShowLatest(t)}
@@ -136,7 +129,7 @@ const TimelineFollows = (props: TimelineFollowsProps) => {
         }}
         displayAs={displayAs}
       />
-      {sortedFeed.length > 0 && (
+      {feed.length > 0 && (
         <ShowMoreInView onClick={async () => await FollowsFeed.loadMore(system, login, oldest ?? unixNow())} />
       )}
     </>
