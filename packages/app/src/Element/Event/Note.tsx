@@ -1,6 +1,6 @@
 import "./Note.css";
 import { ReactNode } from "react";
-import { EventKind, NostrEvent, TaggedNostrEvent } from "@snort/system";
+import { EventKind, NostrEvent, NostrLink, TaggedNostrEvent } from "@snort/system";
 import { NostrFileElement } from "@/Element/Event/NostrFileHeader";
 import ZapstrEmbed from "@/Element/Embed/ZapstrEmbed";
 import PubkeyList from "@/Element/Embed/PubkeyList";
@@ -12,6 +12,7 @@ import { NoteInner } from "./NoteInner";
 import { LongFormText } from "./LongFormText";
 import ErrorBoundary from "@/Element/ErrorBoundary";
 import EventDB from "@/Cache/EventDB";
+import useThreadFeed from "@/Feed/ThreadFeed";
 
 export interface NoteProps {
   data?: TaggedNostrEvent;
@@ -43,6 +44,18 @@ export interface NoteProps {
     longFormPreview?: boolean;
     truncate?: boolean;
   };
+}
+
+function Replies({ id }: { id: string }) {
+  useThreadFeed(NostrLink.fromTag(["e", id])); // maybe there's a better way to do the subscription?
+  const replies = EventDB.findArray({ kinds: [1], "#e": [id] });
+  return (
+    <div className="flex flex-col">
+      {replies.map(reply => (
+        <Note key={reply.id} data={reply} related={[]} />
+      ))}
+    </div>
+  );
 }
 
 export default function Note(props: NoteProps) {
@@ -103,13 +116,10 @@ export default function Note(props: NoteProps) {
   content = <ErrorBoundary>{content}</ErrorBoundary>;
 
   if (props.options?.isRoot) {
-    const replies = EventDB.findArray({ kinds: [1], "#e": [ev.id] });
     return (
       <div className="flex flex-col">
         {content}
-        {replies.map(reply => (
-          <Note key={reply.id} data={reply} related={[]} />
-        ))}
+        <Replies id={ev.id} />
       </div>
     );
   }

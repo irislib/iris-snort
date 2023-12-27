@@ -66,8 +66,6 @@ import Fuse from "fuse.js";
 import NetworkGraph from "@/Pages/NetworkGraph";
 import EventDB from "@/Cache/EventDB";
 
-console.log("EventDB", EventDB);
-
 declare global {
   interface Window {
     plausible?: (tag: string, e?: object) => void;
@@ -139,7 +137,6 @@ const profileTimestamps = new Map<string, number>();
 
 // how to also add entries from ProfileCache?
 System.on("event", ev => {
-  EventDB.insert(ev);
   if (ev.kind === 0) {
     const existing = profileTimestamps.get(ev.pubkey);
     if (existing) {
@@ -162,6 +159,8 @@ System.on("event", ev => {
   if (ev.kind === 3) {
     socialGraphInstance.handleFollowEvent(ev);
   }
+  const saveToIdb = socialGraphInstance.getFollowDistance(ev.pubkey) <= 2;
+  EventDB.insert(ev, saveToIdb);
 });
 
 async function fetchProfile(key: string) {

@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useState} from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import { fetchNip05Pubkey } from "@snort/shared";
 import Spinner from "@/Icons/Spinner";
@@ -17,14 +17,16 @@ export default function NostrLinkHandler() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    setNip05PubKey(null);
     if (!nostrLink) {
-      setNip05PubKey(null);
       setLoading(true);
-      fetchNip05Pubkey(link, CONFIG.nip05Domain).then(k => {
-        setNip05PubKey(k || null);
-      }).finally(() => {
-        setLoading(false);
-      });
+      fetchNip05Pubkey(link, CONFIG.nip05Domain)
+        .then(k => {
+          setNip05PubKey(k || null);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
     }
   }, [link, nostrLink]);
 

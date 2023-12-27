@@ -254,6 +254,7 @@ export default function ProfilePage({ id: propId, state }: ProfilePageProps) {
                 discriminator: id.slice(0, 12),
                 relay: relays,
               }}
+              reqFilter={{ authors: [id], kinds: [1] }}
               postsOnly={false}
               method={"LIMIT_UNTIL"}
               loadMore={false}

@@ -1,6 +1,7 @@
 import loki from "lokijs";
 import { ID, STR, TaggedNostrEvent, ReqFilter as Filter, UID } from "@snort/system";
 import Dexie, { Table } from "dexie";
+import { System } from "@/index";
 
 type Tag = {
   id: string;
@@ -51,6 +52,9 @@ export class EventDB {
       }
       this.idb?.events.each(event => {
         this.insert(event, false);
+        if ([0, 3].includes(event.kind)) {
+          System.HandleEvent(event); // goes to SocialGraph and profile search
+        }
       });
     } catch (e) {
       console.error(e);
@@ -123,10 +127,13 @@ export class EventDB {
 
     const packed = this.pack(event);
 
-    try {
-      this.eventsCollection.insert(packed);
-    } catch (e) {
-      return false;
+    if (![0, 3].includes(event.kind)) {
+      // these are not needed in memory
+      try {
+        this.eventsCollection.insert(packed);
+      } catch (e) {
+        return false;
+      }
     }
 
     if (saveToIdb && this.idb) {

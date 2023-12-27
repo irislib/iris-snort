@@ -1,7 +1,7 @@
 import "./Timeline.css";
 import { FormattedMessage } from "react-intl";
 import { useCallback, useMemo, useState } from "react";
-import { TaggedNostrEvent, EventKind, socialGraphInstance } from "@snort/system";
+import { TaggedNostrEvent, EventKind, socialGraphInstance, ReqFilter } from "@snort/system";
 
 import { dedupeByPubkey, findTag } from "@/SnortUtils";
 import useTimelineFeed, { TimelineFeed, TimelineSubject } from "@/Feed/TimelineFeed";
@@ -11,10 +11,12 @@ import { unixNow } from "@snort/shared";
 import { TimelineRenderer } from "@/Element/Feed/TimelineRenderer";
 import { DisplayAs, DisplayAsSelector } from "@/Element/Feed/DisplayAsSelector";
 import useLogin from "@/Hooks/useLogin";
+import EventDB from "@/Cache/EventDB";
 
 export interface TimelineProps {
   postsOnly: boolean;
   subject: TimelineSubject;
+  reqFilter?: ReqFilter;
   method: "TIME_RANGE" | "LIMIT_UNTIL";
   followDistance?: number;
   ignoreModeration?: boolean;
@@ -41,6 +43,10 @@ const Timeline = (props: TimelineProps) => {
   const feed: TimelineFeed = useTimelineFeed(props.subject, feedOptions);
   const displayAsInitial = props.displayAs ?? login.feedDisplayAs ?? "list";
   const [displayAs, setDisplayAs] = useState<DisplayAs>(displayAsInitial);
+
+  const eventsFromLocalDB = useMemo(() => {
+    return props.reqFilter ? EventDB.findArray(props.reqFilter) : [];
+  }, [props.reqFilter]);
 
   const { muted, isEventMuted } = useModeration();
   const filterPosts = useCallback(
@@ -93,7 +99,7 @@ const Timeline = (props: TimelineProps) => {
       <TimelineRenderer
         frags={[
           {
-            events: mainFeed,
+            events: eventsFromLocalDB.length ? eventsFromLocalDB : mainFeed,
             refTime: mainFeed.at(0)?.created_at ?? unixNow(),
           },
         ]}
