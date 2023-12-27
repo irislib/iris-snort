@@ -20,7 +20,7 @@ import { System } from "@/index";
 export default function TrendingNotes({ count = Infinity, small = false }) {
   const api = new NostrBandApi();
   const { lang } = useLocale();
-  const trendingNotesUrl = api.trendingNotesUrl(lang); // Get the URL for trending notes
+  const trendingNotesUrl = api.trendingNotesUrl(lang);
   const storageKey = `nostr-band-${trendingNotesUrl}`;
 
   const {
@@ -30,7 +30,7 @@ export default function TrendingNotes({ count = Infinity, small = false }) {
   } = useCachedFetch(
     trendingNotesUrl,
     storageKey,
-    data => data.notes.map(a => a.event), // Process the data as needed
+    data => data.notes.map(a => a.event),
   );
 
   const login = useLogin();
@@ -40,7 +40,7 @@ export default function TrendingNotes({ count = Infinity, small = false }) {
   const related = useReactions("trending", trendingNotesData?.map(a => NostrLink.fromEvent(a)) ?? [], undefined, true);
   const [modalThread, setModalThread] = useState<NostrLink | undefined>(undefined);
 
-  if (error) return <ErrorOrOffline error={error} className="p" />;
+  if (error && !trendingNotesData) return <ErrorOrOffline error={error} className="p" />;
   if (isLoading) return <PageSpinner />;
 
   const filteredAndLimitedPosts = trendingNotesData
