@@ -11,9 +11,11 @@ import ProfilePreview from "@/Element/User/ProfilePreview";
 import { NoteInner } from "./NoteInner";
 import { LongFormText } from "./LongFormText";
 import ErrorBoundary from "@/Element/ErrorBoundary";
+import EventDB from "@/Cache/EventDB";
 
 export interface NoteProps {
-  data: TaggedNostrEvent;
+  data?: TaggedNostrEvent;
+  id?: string;
   className?: string;
   related: readonly TaggedNostrEvent[];
   highlight?: boolean;
@@ -44,7 +46,20 @@ export interface NoteProps {
 }
 
 export default function Note(props: NoteProps) {
-  const { data: ev, className } = props;
+  let ev = props.data;
+  const { id, className } = props;
+
+  if (!id && !ev) {
+    throw new Error("Note: id or data is required");
+  }
+
+  if (id) {
+    ev = EventDB.get(id);
+  }
+
+  if (!ev) {
+    return null;
+  }
 
   let content;
   switch (ev.kind) {

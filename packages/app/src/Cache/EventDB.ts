@@ -17,16 +17,19 @@ export class EventDB {
   }
 
   init() {
+    console.log('EventDB ready');
     if (!this.db.getCollection('events')) {
       this.eventsCollection = this.db.addCollection('events', {
         unique: ['id'],
         indices: ['pubkey', 'kind', 'flatTags', 'created_at'],
       });
+    } else {
+      this.eventsCollection = this.db.getCollection('events');
     }
   }
 
   get(id: any): TaggedNostrEvent | undefined {
-    const event = this.eventsCollection.by('id', ID(id));
+    const event = this.eventsCollection?.by('id', ID(id)); // throw if db not ready yet?
     if (event) {
       return this.unpack(event);
     }
