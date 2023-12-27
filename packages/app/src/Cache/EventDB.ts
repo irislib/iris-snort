@@ -1,7 +1,6 @@
 import loki from 'lokijs';
 import IncrementalIndexedDBAdapter from 'lokijs/src/incremental-indexeddb-adapter.js'
-import { Filter } from 'nostr-tools';
-import {ID, STR, TaggedNostrEvent} from "@snort/system";
+import {ID, STR, TaggedNostrEvent, ReqFilter as Filter} from "@snort/system";
 
 export class EventDB {
   private db: any;
