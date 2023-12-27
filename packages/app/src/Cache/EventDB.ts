@@ -34,7 +34,7 @@ export class EventDB {
       indices: ["pubkey", "kind", "flatTags", "created_at"],
     });
     this.idb.events.each(event => {
-      this.eventsCollection.insert(event, false);
+      this.insert(event, false);
     });
   }
 
