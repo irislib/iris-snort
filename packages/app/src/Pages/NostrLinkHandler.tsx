@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, {useEffect, useMemo, useState} from "react";
 import { useParams, useLocation } from "react-router-dom";
 import { fetchNip05Pubkey } from "@snort/shared";
 import Spinner from "@/Icons/Spinner";
@@ -12,63 +12,51 @@ export default function NostrLinkHandler() {
   const { state } = useLocation();
   const { link } = useParams();
 
-  const determineInitialComponent = link => {
-    const nav = tryParseNostrLink(link);
-    if (nav) {
-      switch (nav.type) {
-        case NostrPrefix.Event:
-        case NostrPrefix.Note:
-        case NostrPrefix.Address:
-          return <ThreadRoute key={link} id={nav.encode()} />;
-        case NostrPrefix.PublicKey:
-        case NostrPrefix.Profile:
-          return <ProfilePage key={link} id={nav.encode()} state={state} />;
-        case NostrPrefix.Req:
-          return <GenericFeed key={link} link={nav} />;
-        default:
-          return null;
-      }
-    } else {
-      return state ? <ProfilePage key={link} state={state} /> : null;
-    }
-  };
-
-  const initialRenderComponent = determineInitialComponent(link);
-  const [loading, setLoading] = useState(initialRenderComponent ? false : true);
-  const [renderComponent, setRenderComponent] = useState(initialRenderComponent);
-
-  async function handleLink(link) {
-    if (!tryParseNostrLink(link)) {
-      try {
-        const pubkey = await fetchNip05Pubkey(link, CONFIG.nip05Domain);
-        if (pubkey) {
-          setRenderComponent(<ProfilePage key={link} id={pubkey} state={state} />);
-        }
-      } catch {
-        // Ignored
-      }
-      setLoading(false);
-    }
-  }
+  const nostrLink = useMemo(() => tryParseNostrLink(link), [link]);
+  const [nip05PubKey, setNip05PubKey] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    setRenderComponent(determineInitialComponent(link));
-    handleLink(link);
-  }, [link]); // Depend only on 'link'
+    if (!nostrLink) {
+      setNip05PubKey(null);
+      setLoading(true);
+      fetchNip05Pubkey(link, CONFIG.nip05Domain).then(k => {
+        setNip05PubKey(k || null);
+      }).finally(() => {
+        setLoading(false);
+      });
+    }
+  }, [link, nostrLink]);
 
-  if (renderComponent) {
-    return renderComponent;
+  if (nip05PubKey) {
+    return <ProfilePage key={link} id={nip05PubKey} state={state} />;
+  }
+
+  if (nostrLink) {
+    switch (nostrLink.type) {
+      case NostrPrefix.Event:
+      case NostrPrefix.Note:
+      case NostrPrefix.Address:
+        return <ThreadRoute key={link} id={nostrLink.encode()} />;
+      case NostrPrefix.PublicKey:
+      case NostrPrefix.Profile:
+        return <ProfilePage key={link} id={nostrLink.encode()} state={state} />;
+      case NostrPrefix.Req:
+        return <GenericFeed key={link} link={nostrLink} />;
+    }
+  } else {
+    return state ? <ProfilePage key={link} state={state} /> : null;
+  }
+
+  if (loading) {
+    return <Spinner width={50} height={50} />;
   }
 
   return (
     <div className="flex items-center">
-      {loading ? (
-        <Spinner width={50} height={50} />
-      ) : (
-        <b className="error">
-          <FormattedMessage defaultMessage="Nothing found :/" id="oJ+JJN" />
-        </b>
-      )}
+      <b className="error">
+        <FormattedMessage defaultMessage="Nothing found :/" id="oJ+JJN" />
+      </b>
     </div>
   );
 }
