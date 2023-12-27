@@ -1,4 +1,5 @@
 import loki from 'lokijs';
+import IncrementalIndexedDBAdapter from 'lokijs/src/incremental-indexeddb-adapter.js'
 import { Filter } from 'nostr-tools';
 import {ID, STR, TaggedNostrEvent} from "@snort/system";
 
@@ -7,11 +8,22 @@ export class EventDB {
   private eventsCollection: any;
 
   constructor() {
-    this.db = new loki('EventDB');
-    this.eventsCollection = this.db.addCollection('events', {
-      unique: ['id'],
-      indices: ['pubkey', 'kind', 'flatTags', 'created_at'],
+    this.db = new loki('EventDB', {
+      adapter: new IncrementalIndexedDBAdapter(),
+      autoload: true,
+      autoloadCallback: this.init.bind(this),
+      autosave: true,
+      autosaveInterval: 4000,
     });
+  }
+
+  init() {
+    if (!this.db.getCollection('events')) {
+      this.eventsCollection = this.db.addCollection('events', {
+        unique: ['id'],
+        indices: ['pubkey', 'kind', 'flatTags', 'created_at'],
+      });
+    }
   }
 
   get(id: any): TaggedNostrEvent | undefined {
