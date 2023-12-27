@@ -300,7 +300,7 @@ if (CONFIG.features.subscriptions) {
 
 // add catch all route
 mainRoutes.push({
-  path: "/*",
+  path: "/:link",
   element: <NostrLinkHandler />,
 });
 
