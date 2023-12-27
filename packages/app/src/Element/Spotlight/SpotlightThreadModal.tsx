@@ -17,7 +17,6 @@ interface SpotlightThreadModalProps {
 
 export function SpotlightThreadModal(props: SpotlightThreadModalProps) {
   const onClose = () => props.onClose?.();
-  const onBack = () => props.onBack?.();
   const onClickBg = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
       onClose();
