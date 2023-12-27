@@ -8,7 +8,7 @@ import { EventKind, NostrLink, parseZap, TaggedNostrEvent } from "@snort/system"
  * @param related
  * @returns
  */
-export function useEventReactions(link: NostrLink, related: ReadonlyArray<TaggedNostrEvent>) {
+export function useEventReactions(link: NostrLink, related: ReadonlyArray<TaggedNostrEvent> = []) {
   return useMemo(() => {
     const reactionKinds = related.reduce(
       (acc, v) => {

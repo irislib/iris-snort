@@ -86,7 +86,7 @@ export class EventDB {
     }
 
     if (this.eventsCollection.by("id", ID(event.id))) {
-      return false;
+      return false; // this prevents updating event.relays?
     }
 
     const clone = this.pack(event);

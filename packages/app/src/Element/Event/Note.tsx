@@ -106,12 +106,12 @@ export default function Note(props: NoteProps) {
   if (props.options?.standalone) {
     const replies = EventDB.findArray({ kinds: [1], "#e": [ev.id] });
     return (
-      <>
+      <div className="flex flex-col">
         {content}
         {replies.map(reply => (
           <Note key={reply.id} data={reply} related={[]} />
         ))}
-      </>
+      </div>
     );
   }
 

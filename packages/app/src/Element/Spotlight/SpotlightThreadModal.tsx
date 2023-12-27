@@ -1,9 +1,9 @@
 import Modal from "@/Element/Modal";
-import { ThreadContextWrapper } from "@/Hooks/useThreadContext";
-import { Thread } from "@/Element/Event/Thread";
 import { SpotlightMedia } from "@/Element/Spotlight/SpotlightMedia";
 import { NostrLink, TaggedNostrEvent } from "@snort/system";
 import getEventMedia from "@/Element/Event/getEventMedia";
+import Note from "@/Element/Event/Note";
+import EventDB from "@/Cache/EventDB";
 
 interface SpotlightThreadModalProps {
   thread?: NostrLink;
@@ -30,23 +30,22 @@ export function SpotlightThreadModal(props: SpotlightThreadModalProps) {
 
   const link = props.event ? NostrLink.fromEvent(props.event) : props.thread;
 
+  const event = props.event || EventDB.get(link?.id);
+
+  if (!event) {
+    return null;
+  }
+
   return (
     <Modal className={props.className} onClose={onClose} bodyClassName={"flex flex-1"}>
-      <ThreadContextWrapper link={link!}>
-        <div className="flex flex-row h-screen w-screen">
-          <div className="flex w-full md:w-2/3 items-center justify-center overflow-hidden" onClick={onClickBg}>
-            <SpotlightFromEvent
-              event={props.event || thread.root}
-              onClose={onClose}
-              onNext={props.onNext}
-              onPrev={props.onPrev}
-            />
-          </div>
-          <div className="hidden md:flex w-1/3 min-w-[400px] flex-shrink-0 overflow-y-auto bg-bg-color">
-            <Thread onBack={onBack} disableSpotlight={true} />
-          </div>
+      <div className="flex flex-row h-screen w-screen">
+        <div className="flex w-full md:w-2/3 items-center justify-center overflow-hidden" onClick={onClickBg}>
+          <SpotlightFromEvent event={event} onClose={onClose} onNext={props.onNext} onPrev={props.onPrev} />
         </div>
-      </ThreadContextWrapper>
+        <div className="hidden md:flex w-1/3 min-w-[400px] flex-shrink-0 overflow-y-auto bg-bg-color">
+          <Note id={link?.id} options={{ standalone: true }} />
+        </div>
+      </div>
     </Modal>
   );
 }
