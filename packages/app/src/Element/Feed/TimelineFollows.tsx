@@ -14,6 +14,7 @@ import useHashtagsFeed from "@/Feed/HashtagsFeed";
 import { ShowMoreInView } from "@/Element/Event/ShowMore";
 import { TimelineRenderer } from "@/Element/Feed/TimelineRenderer";
 import { DisplayAs, DisplayAsSelector } from "@/Element/Feed/DisplayAsSelector";
+import EventDB from "@/Cache/EventDB";
 
 export interface TimelineFollowsProps {
   postsOnly: boolean;
@@ -107,6 +108,8 @@ const TimelineFollows = (props: TimelineFollowsProps) => {
     }
   }
 
+  const events = EventDB.findArray({ kinds: [1], authors: login.follows.item, limit: 100, until: latest });
+
   return (
     <>
       {(props.liveStreams ?? true) && <LiveStreams evs={liveStreams} />}
@@ -116,7 +119,7 @@ const TimelineFollows = (props: TimelineFollowsProps) => {
         onSelect={(displayAs: DisplayAs) => setDisplayAs(displayAs)}
       />
       <TimelineRenderer
-        frags={[{ events: orderDescending(mainFeed.concat(mixinFiltered)), refTime: latest }]}
+        frags={[{ events, refTime: latest }]}
         related={reactions.data ?? []}
         latest={latestAuthors}
         showLatest={t => onShowLatest(t)}
