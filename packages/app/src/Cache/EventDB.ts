@@ -51,13 +51,16 @@ export class EventDB {
       if (this.hasIndexedDB()) {
         this.idb = new MyDexie();
       }
-      this.idb?.events.each(event => {
-        this.insert(event, false);
-        if ([0, 3].includes(event.kind)) {
-          this.seen.add(ID(event.id));
-          System.HandleEvent(event, { skipVerify: true }); // goes to SocialGraph and profile search
-        }
-      });
+      this.idb?.events
+        .orderBy("created_at")
+        .reverse()
+        .each(event => {
+          this.insert(event, false);
+          if ([0, 3].includes(event.kind)) {
+            this.seen.add(ID(event.id));
+            System.HandleEvent(event, { skipVerify: true }); // goes to SocialGraph and profile search
+          }
+        });
     } catch (e) {
       console.error(e);
     }

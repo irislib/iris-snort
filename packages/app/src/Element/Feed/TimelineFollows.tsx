@@ -74,6 +74,8 @@ const TimelineFollows = (props: TimelineFollowsProps) => {
     const tag = a.tags.filter(a => a[0] === "t").find(a => login.tags.item.includes(a[1].toLowerCase()))?.[1];
     return tag;
   };
+
+  /* TODO add hashtags back
   const mixinFiltered = useMemo(() => {
     const mainFeedIds = new Set(mainFeed.map(a => a.id));
     return (mixin.data.data ?? [])
@@ -88,6 +90,8 @@ const TimelineFollows = (props: TimelineFollowsProps) => {
           }) as TaggedNostrEvent,
       );
   }, [mixin, mainFeed, postsOnly, isEventMuted]);
+
+   */
 
   const latestFeed = useMemo(() => {
     return filterPosts((sortedFeed ?? []).filter(a => a.created_at > latest));

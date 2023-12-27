@@ -155,7 +155,15 @@ export const FollowedByFriendsTab = () => {
     streams: true,
   };
 
-  return <Timeline followDistance={2} subject={subject} postsOnly={true} method={"TIME_RANGE"} />;
+  return (
+    <Timeline
+      reqFilter={{ kinds: [1], limit: 200 }}
+      followDistance={2}
+      subject={subject}
+      postsOnly={true}
+      method={"TIME_RANGE"}
+    />
+  );
 };
 
 export const NotesTab = () => {

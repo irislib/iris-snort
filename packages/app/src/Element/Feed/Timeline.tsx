@@ -46,7 +46,7 @@ const Timeline = (props: TimelineProps) => {
 
   const eventsFromLocalDB = useMemo(() => {
     return props.reqFilter ? EventDB.findArray(props.reqFilter) : [];
-  }, [props.reqFilter]);
+  }, [props.reqFilter, feed]);
 
   const { muted, isEventMuted } = useModeration();
   const filterPosts = useCallback(
@@ -68,8 +68,8 @@ const Timeline = (props: TimelineProps) => {
   );
 
   const mainFeed = useMemo(() => {
-    return filterPosts(feed.main ?? []);
-  }, [feed, filterPosts]);
+    return filterPosts(eventsFromLocalDB.length ? eventsFromLocalDB : feed.main ?? []);
+  }, [feed, filterPosts, eventsFromLocalDB]);
   const latestFeed = useMemo(() => {
     return filterPosts(feed.latest ?? []).filter(a => !mainFeed.some(b => b.id === a.id));
   }, [feed, filterPosts]);
@@ -99,7 +99,7 @@ const Timeline = (props: TimelineProps) => {
       <TimelineRenderer
         frags={[
           {
-            events: eventsFromLocalDB.length ? eventsFromLocalDB : mainFeed,
+            events: mainFeed,
             refTime: mainFeed.at(0)?.created_at ?? unixNow(),
           },
         ]}
