@@ -97,7 +97,7 @@ export default function Note(props: NoteProps) {
       );
       break;
     default:
-      content = <NoteInner {...props} />;
+      content = <NoteInner {...props} data={ev} />;
   }
 
   return <ErrorBoundary>{content}</ErrorBoundary>;

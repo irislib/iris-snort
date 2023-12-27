@@ -71,8 +71,6 @@ export class EventDB {
   }
 
   insert(event: TaggedNostrEvent): boolean {
-    // TODO map tags to UIDs
-
     if (!event || !event.id || !event.created_at) {
       throw new Error('Invalid event');
     }
@@ -98,7 +96,6 @@ export class EventDB {
 
   find(filter: Filter, callback: (event: TaggedNostrEvent) => void): void {
     this.findArray(filter).forEach((event) => {
-      // TODO map UID tags to STR
       callback(event);
     });
   }
