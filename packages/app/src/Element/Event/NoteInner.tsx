@@ -327,6 +327,7 @@ export function NoteInner(props: NoteProps) {
 
   function content() {
     // this is a problem, causes notes to be hidden on first render (flicker)
+    // as a workaround, we're setting waitUntilInView={false} for the first 10 or so notes in lists
     if (waitUntilInView !== false && !inView) return undefined;
     return (
       <>
