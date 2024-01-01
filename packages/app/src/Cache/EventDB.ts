@@ -58,7 +58,6 @@ export class EventDB {
         .anyOf([0, 3]) // load social graph and profiles. TODO: load other stuff on request
         .each(event => {
           this.insert(event, false);
-          this.seen.add(ID(event.id));
           System.HandleEvent(event, { skipVerify: true });
         });
     } catch (e) {
@@ -77,7 +76,7 @@ export class EventDB {
           this.idbSaveQueue = [];
         }
       }
-    }, 500);
+    }, 1000);
   }
 
   private hasIndexedDB(): boolean {
