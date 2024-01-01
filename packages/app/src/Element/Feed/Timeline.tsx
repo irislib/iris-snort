@@ -11,7 +11,7 @@ import { unixNow } from "@snort/shared";
 import { TimelineRenderer } from "@/Element/Feed/TimelineRenderer";
 import { DisplayAs, DisplayAsSelector } from "@/Element/Feed/DisplayAsSelector";
 import useLogin from "@/Hooks/useLogin";
-import EventDB from "@/Cache/EventDB";
+import EventDB from "@/Cache/LokiDB";
 
 export interface TimelineProps {
   postsOnly: boolean;

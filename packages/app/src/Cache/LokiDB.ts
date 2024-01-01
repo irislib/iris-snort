@@ -1,28 +1,5 @@
 import loki from "lokijs";
-import { ID, STR, TaggedNostrEvent, ReqFilter as Filter, UID } from "@snort/system";
-import Dexie, { Table } from "dexie";
-import { System } from "@/index";
-
-type Tag = {
-  id: string;
-  eventId: string;
-  type: string;
-  value: string;
-};
-
-class MyDexie extends Dexie {
-  events!: Table<TaggedNostrEvent>;
-  tags!: Table<Tag>;
-
-  constructor() {
-    super("EventDB");
-
-    this.version(5).stores({
-      events: "id, pubkey, kind, created_at, [pubkey+kind]",
-      tags: "id, eventId, [type+value]",
-    });
-  }
-}
+import { ID, ReqFilter as Filter, STR, TaggedNostrEvent, UID } from "@snort/system";
 
 type PackedNostrEvent = {
   id: UID;
@@ -36,55 +13,15 @@ type PackedNostrEvent = {
   relays: string[];
 };
 
-export class EventDB {
+class LokiDB {
   private loki = new loki("EventDB");
-  private idb: MyDexie | null = null;
-  private idbSaveQueue: TaggedNostrEvent[] = [];
   private eventsCollection: Collection<PackedNostrEvent>;
-  private seen = new Set<UID>();
 
   constructor() {
     this.eventsCollection = this.loki.addCollection("events", {
       unique: ["id"],
       indices: ["pubkey", "kind", "flatTags", "created_at"],
     });
-    try {
-      if (this.hasIndexedDB()) {
-        this.idb = new MyDexie();
-        this.startIdbInterval();
-      }
-      this.idb?.events
-        .where("kind")
-        .anyOf([0, 3]) // load social graph and profiles. TODO: load other stuff on request
-        .each(event => {
-          this.insert(event, false);
-          System.HandleEvent(event, { skipVerify: true });
-        });
-    } catch (e) {
-      console.error(e);
-    }
-  }
-
-  private startIdbInterval() {
-    setInterval(() => {
-      if (this.idbSaveQueue.length > 0) {
-        try {
-          this.idb?.events.bulkPut(this.idbSaveQueue);
-        } catch (e) {
-          console.error(e);
-        } finally {
-          this.idbSaveQueue = [];
-        }
-      }
-    }, 1000);
-  }
-
-  private hasIndexedDB(): boolean {
-    try {
-      return !!window.indexedDB;
-    } catch (e) {
-      return false;
-    }
   }
 
   get(id: string): TaggedNostrEvent | undefined {
@@ -134,13 +71,13 @@ export class EventDB {
     };
   }
 
-  insert(event: TaggedNostrEvent, saveToIdb = true): boolean {
+  handleEvent(event: TaggedNostrEvent): boolean {
     if (!event || !event.id || !event.created_at) {
       throw new Error("Invalid event");
     }
 
     const id = ID(event.id);
-    if (this.eventsCollection.by("id", id) || this.seen.has(id)) {
+    if (this.eventsCollection.by("id", id)) {
       return false; // this prevents updating event.relays?
     }
 
@@ -152,16 +89,6 @@ export class EventDB {
         this.eventsCollection.insert(packed);
       } catch (e) {
         return false;
-      }
-    } else {
-      this.seen.add(id);
-    }
-
-    if (saveToIdb && this.idb) {
-      try {
-        this.idbSaveQueue.push(event);
-      } catch (e) {
-        console.error(e);
       }
     }
 
@@ -250,4 +177,4 @@ export class EventDB {
   }
 }
 
-export default new EventDB();
+export default new LokiDB();

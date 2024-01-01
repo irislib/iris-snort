@@ -1,7 +1,7 @@
 import { Event } from "nostr-tools";
 import { beforeEach, describe, expect, test } from "vitest";
 
-import { EventDB } from "@/nostr/EventDB.ts";
+import EventDB from "./LokiDB";
 
 import events from "../../../tests/events.json";
 
@@ -13,11 +13,11 @@ describe("EventDB", () => {
     db = new EventDB();
 
     testEvent = events[0];
-    db.insert(testEvent);
+    db.handleEvent(testEvent);
   });
 
   test("should insert event", () => {
-    const success = db.insert(events[1]);
+    const success = db.handleEvent(events[1]);
     expect(success).toBe(true);
     expect(db.get(events[1].id)).toEqual(events[1]);
   });
@@ -52,7 +52,7 @@ describe("EventDB", () => {
 
   test("should handle invalid event insertion", () => {
     const invalidEvent = { ...testEvent, id: undefined };
-    expect(() => db.insert(invalidEvent as any)).toThrow("Invalid event");
+    expect(() => db.handleEvent(invalidEvent as any)).toThrow("Invalid event");
   });
 
   test("should findOne event based on filter", () => {
@@ -68,7 +68,7 @@ describe("EventDB find tests", () => {
   beforeEach(() => {
     eventDB = new EventDB();
     events.forEach(event => {
-      eventDB.insert(event);
+      eventDB.handleEvent(event);
     });
   });
 

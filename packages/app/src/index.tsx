@@ -62,9 +62,10 @@ import { AboutPage } from "@/Pages/About";
 import { OnboardingRoutes } from "@/Pages/onboarding";
 import { setupWebLNWalletConfig } from "@/Wallet/WebLN";
 import { Wallets } from "@/Wallet";
-import Fuse from "fuse.js";
 import NetworkGraph from "@/Pages/NetworkGraph";
-import EventDB from "@/Cache/EventDB";
+import LokiDB from "@/Cache/LokiDB";
+import indexedDB from "@/Cache/IndexedDB";
+import { addToFuzzySearch } from "@/FuzzySearch";
 
 declare global {
   interface Window {
@@ -120,47 +121,15 @@ System.on("auth", async (c, r, cb) => {
   }
 });
 
-export type FuzzySearchResult = {
-  pubkey: string;
-  name?: string;
-  display_name?: string;
-  nip05?: string;
-};
-
-export const fuzzySearch = new Fuse<FuzzySearchResult>([], {
-  keys: ["name", "display_name", { name: "nip05", weight: 0.5 }],
-  threshold: 0.3,
-  // sortFn here?
-});
-
-const profileTimestamps = new Map<string, number>();
-
-// how to also add entries from ProfileCache?
 System.on("event", ev => {
-  if (ev.kind === 0) {
-    const existing = profileTimestamps.get(ev.pubkey);
-    if (existing) {
-      if (existing > ev.created_at) {
-        return;
-      }
-      fuzzySearch.remove(doc => doc.pubkey === ev.pubkey);
-    }
-    profileTimestamps.set(ev.pubkey, ev.created_at);
-    try {
-      const data = JSON.parse(ev.content);
-      if (ev.pubkey && (data.name || data.display_name || data.nip05)) {
-        data.pubkey = ev.pubkey;
-        fuzzySearch.add(data);
-      }
-    } catch (e) {
-      console.error(e);
-    }
+  // these should extend Actor class which schedules every handleEvent call with a setInterval queue
+  // in order to not block the main thread?
+  addToFuzzySearch(ev);
+  socialGraphInstance.handleEvent(ev);
+  LokiDB.handleEvent(ev);
+  if (socialGraphInstance.getFollowDistance(ev.pubkey) <= 2) {
+    indexedDB.handleEvent(ev);
   }
-  if (ev.kind === 3) {
-    socialGraphInstance.handleFollowEvent(ev);
-  }
-  const saveToIdb = socialGraphInstance.getFollowDistance(ev.pubkey) <= 2;
-  EventDB.insert(ev, saveToIdb);
 });
 
 async function fetchProfile(key: string) {

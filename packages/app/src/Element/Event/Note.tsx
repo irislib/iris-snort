@@ -11,7 +11,7 @@ import ProfilePreview from "@/Element/User/ProfilePreview";
 import { NoteInner } from "./NoteInner";
 import { LongFormText } from "./LongFormText";
 import ErrorBoundary from "@/Element/ErrorBoundary";
-import EventDB from "@/Cache/EventDB";
+import EventDB from "@/Cache/LokiDB";
 import useThreadFeed from "@/Feed/ThreadFeed";
 
 export interface NoteProps {
