@@ -124,6 +124,7 @@ System.on("auth", async (c, r, cb) => {
 System.on("event", ev => {
   // these should extend Actor class which schedules every handleEvent call with a setInterval queue
   // in order to not block the main thread?
+  // maybe even handleMessage using nostr network messages, so Actors could even be workers?
   addToFuzzySearch(ev);
   socialGraphInstance.handleEvent(ev);
   LokiDB.handleEvent(ev);

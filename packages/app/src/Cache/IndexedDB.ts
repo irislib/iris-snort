@@ -1,5 +1,5 @@
 import Dexie, { Table } from "dexie";
-import { TaggedNostrEvent } from "@snort/system";
+import {ID, TaggedNostrEvent, UID} from "@snort/system";
 import { System } from "@/index";
 
 type Tag = {
@@ -13,6 +13,7 @@ class IndexedDB extends Dexie {
   events!: Table<TaggedNostrEvent>;
   tags!: Table<Tag>;
   private saveQueue: TaggedNostrEvent[] = [];
+  private seenEvents = new Set<UID>();
 
   constructor() {
     super("EventDB");
@@ -26,6 +27,7 @@ class IndexedDB extends Dexie {
       .where("kind")
       .anyOf([0, 3]) // load social graph and profiles. TODO: load other stuff on request
       .each(event => {
+        this.seenEvents.add(ID(event.id));
         // TODO: system should get these via subscribe method
         System.HandleEvent(event, { skipVerify: true });
       });
@@ -48,6 +50,11 @@ class IndexedDB extends Dexie {
   }
 
   handleEvent(event: TaggedNostrEvent) {
+    const id = ID(event.id);
+    if (this.seenEvents.has(id)) {
+      return;
+    }
+    this.seenEvents.add(id);
     this.saveQueue.push(event);
   }
 }
