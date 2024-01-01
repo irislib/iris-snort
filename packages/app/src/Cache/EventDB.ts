@@ -39,6 +39,7 @@ type PackedNostrEvent = {
 export class EventDB {
   private loki = new loki("EventDB");
   private idb: MyDexie | null = null;
+  private idbSaveQueue: TaggedNostrEvent[] = [];
   private eventsCollection: Collection<PackedNostrEvent>;
   private seen = new Set<UID>();
 
@@ -50,6 +51,7 @@ export class EventDB {
     try {
       if (this.hasIndexedDB()) {
         this.idb = new MyDexie();
+        this.startIdbInterval();
       }
       this.idb?.events
         .where("kind")
@@ -62,6 +64,20 @@ export class EventDB {
     } catch (e) {
       console.error(e);
     }
+  }
+
+  private startIdbInterval() {
+    setInterval(() => {
+      if (this.idbSaveQueue.length > 0) {
+        try {
+          this.idb?.events.bulkPut(this.idbSaveQueue);
+        } catch (e) {
+          console.error(e);
+        } finally {
+          this.idbSaveQueue = [];
+        }
+      }
+    }, 500);
   }
 
   private hasIndexedDB(): boolean {
@@ -144,7 +160,7 @@ export class EventDB {
 
     if (saveToIdb && this.idb) {
       try {
-        this.idb.events.put(event); // TODO bulk
+        this.idbSaveQueue.push(event);
       } catch (e) {
         console.error(e);
       }
