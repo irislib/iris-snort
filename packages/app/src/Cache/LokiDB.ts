@@ -116,11 +116,12 @@ class LokiDB {
   findArray(filter: Filter): TaggedNostrEvent[] {
     const query = this.constructQuery(filter);
 
+    const searchRegex = filter.search ? new RegExp(filter.search, "i") : undefined;
     let chain = this.eventsCollection
       .chain()
       .find(query)
       .where((e: PackedNostrEvent) => {
-        if (filter.search && !e.content?.includes(filter.search)) {
+        if (searchRegex && !e.content?.match(searchRegex)) {
           return false;
         }
         return true;
