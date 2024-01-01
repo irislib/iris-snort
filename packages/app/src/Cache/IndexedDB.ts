@@ -1,5 +1,5 @@
 import Dexie, { Table } from "dexie";
-import {ID, TaggedNostrEvent, UID} from "@snort/system";
+import { ID, TaggedNostrEvent, UID } from "@snort/system";
 import { System } from "@/index";
 
 type Tag = {

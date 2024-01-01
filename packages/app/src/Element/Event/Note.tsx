@@ -26,6 +26,7 @@ export interface NoteProps {
   searchedValue?: string;
   threadChains?: Map<string, Array<NostrEvent>>;
   context?: ReactNode;
+  waitUntilInView?: boolean;
   options?: {
     isRoot?: boolean;
     showHeader?: boolean;
