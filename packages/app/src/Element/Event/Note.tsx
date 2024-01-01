@@ -52,8 +52,8 @@ function Replies({ id }: { id: string }) {
   const replies = EventDB.findArray({ kinds: [1], "#e": [id] });
   return (
     <div className="flex flex-col">
-      {replies.map(reply => (
-        <Note key={reply.id} data={reply} related={[]} />
+      {replies.map((reply, index) => (
+        <Note key={reply.id} data={reply} related={[]} waitUntilInView={index > 10} />
       ))}
     </div>
   );
