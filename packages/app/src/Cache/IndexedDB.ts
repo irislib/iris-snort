@@ -10,17 +10,19 @@ type Tag = {
 };
 
 const systemHandleEvent = (event: TaggedNostrEvent) => {
-  /*😆*/
+  // requestAnimationFrame 😆
   requestAnimationFrame(() => {
     //console.log("found idb event", event.id, event.content?.slice(0, 20) || "");
     System.HandleEvent(event, { skipVerify: true });
   });
 };
 
+type SaveQueueEntry = { event: TaggedNostrEvent, tags: Tag[] };
+
 class IndexedDB extends Dexie {
   events!: Table<TaggedNostrEvent>;
   tags!: Table<Tag>;
-  private saveQueue: TaggedNostrEvent[] = [];
+  private saveQueue: SaveQueueEntry[] = [];
   private seenEvents = new Set<UID>();
   private seenFilters = new Set<string>();
   private subscribedEventIds = new Set<string>();
@@ -51,7 +53,14 @@ class IndexedDB extends Dexie {
     setInterval(() => {
       if (this.saveQueue.length > 0) {
         try {
-          this.events.bulkPut(this.saveQueue);
+          const eventsToSave: TaggedNostrEvent[] = [];
+          const tagsToSave: Tag[] = [];
+          for (const item of this.saveQueue) {
+            eventsToSave.push(item.event);
+            tagsToSave.push(...item.tags);
+          }
+          this.events.bulkPut(eventsToSave);
+          this.tags.bulkPut(tagsToSave);
         } catch (e) {
           console.error(e);
         } finally {
@@ -68,8 +77,8 @@ class IndexedDB extends Dexie {
     }
     this.seenEvents.add(id);
 
-    /*
-    const eventTags =
+    // maybe we don't want event.kind 3 tags
+    const tags = event.kind === 3 ? [] :
       event.tags
         ?.filter((tag) => {
           if (tag[0] === 'd') {
@@ -79,7 +88,7 @@ class IndexedDB extends Dexie {
             return true;
           }
           // we're only interested in p tags where we are mentioned
-          if (tag[0] === 'p' && Key.isMine(tag[1])) {
+          if (tag[0] === 'p') { // && Key.isMine(tag[1])) {
             return true;
           }
           return false;
@@ -90,24 +99,24 @@ class IndexedDB extends Dexie {
           type: tag[0],
           value: tag[1],
         })) || [];
-     */
 
-    this.saveQueue.push(event);
+    this.saveQueue.push({event, tags});
   }
 
   _throttle(func, limit) {
     let inThrottle;
     return function (...args) {
       if (!inThrottle) {
-        func.apply(this, args);
         inThrottle = true;
-        setTimeout(() => (inThrottle = false), limit);
+        setTimeout(() => {
+          inThrottle = false;
+          func.apply(this, args);
+        }, limit);
       }
     };
   }
 
   subscribeToAuthors = this._throttle(async function (limit?: number) {
-    console.log("subscribing to authors", this.subscribedAuthors);
     const authors = [...this.subscribedAuthors];
     this.subscribedAuthors.clear();
     await this.events
@@ -118,14 +127,12 @@ class IndexedDB extends Dexie {
   }, 1000);
 
   subscribeToEventIds = this._throttle(async function () {
-    console.log("subscribing to event ids", this.subscribedEventIds);
     const ids = [...this.subscribedEventIds];
     this.subscribedEventIds.clear();
     await this.events.where("id").anyOf(ids).each(systemHandleEvent);
   }, 1000);
 
   subscribeToTags = this._throttle(async function() {
-    console.log("subscribing to tags", this.subscribedTags);
     const tagPairs = [...this.subscribedTags].map(tag => tag.split("|"));
     this.subscribedTags.clear();
     await this.tags
@@ -200,7 +207,6 @@ class IndexedDB extends Dexie {
         return;
       }
       this.seenEvents.add(id);
-      //console.log("found idb event", e.id, e.content?.slice(0, 20) || "");
       systemHandleEvent(e);
     });
   }
