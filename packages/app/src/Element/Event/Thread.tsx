@@ -13,7 +13,6 @@ export function ThreadRoute({ id }: { id?: string }) {
       related={[]}
       options={{ showReactionsLink: true, showMediaSpotlight: true, isRoot: true }}
       threadChains={new Map()}
-      waitUntilInView={false}
     />
   );
 }
