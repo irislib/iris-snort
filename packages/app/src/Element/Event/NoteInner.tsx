@@ -370,7 +370,7 @@ export function NoteInner(props: NoteProps) {
             </div>
           </div>
         )}
-        <div className={classNames("body", { "text-lg": opt?.isRoot })} onClick={e => goToEvent(e, ev, true)}>
+        <div className={classNames("body", { "text-lg": highlight })} onClick={e => goToEvent(e, ev, true)}>
           {transformBody()}
           {translation()}
           {pollOptions()}
@@ -405,7 +405,7 @@ export function NoteInner(props: NoteProps) {
     <div
       className={classNames(baseClassName, {
         active: highlight,
-        "hover:bg-nearly-bg-color cursor-pointer": !opt?.isRoot,
+        "hover:bg-nearly-bg-color cursor-pointer": !highlight,
       })}
       onClick={e => goToEvent(e, ev)}
       ref={ref}>

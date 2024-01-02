@@ -712,6 +712,9 @@
     "defaultMessage": "Wallet password",
     "description": "Wallet password input placeholder"
   },
+  "MT6S6f": {
+    "defaultMessage": "Show thread"
+  },
   "MWTx65": {
     "defaultMessage": "Default Page"
   },

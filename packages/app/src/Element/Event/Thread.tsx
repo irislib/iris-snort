@@ -11,10 +11,11 @@ export function ThreadRoute({ id }: { id?: string }) {
     <Note
       id={link.id}
       related={[]}
-      options={{ showReactionsLink: true, showMediaSpotlight: true, isRoot: true }}
+      options={{ showReactionsLink: true, showMediaSpotlight: true }}
       threadChains={new Map()}
       showReplies={Infinity}
       showRepliedMessage={true}
+      highlight={true}
     />
   );
 }

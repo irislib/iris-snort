@@ -1,6 +1,6 @@
 import "./Note.css";
 import { ReactNode, useMemo } from "react";
-import { EventKind, NostrEvent, NostrLink, TaggedNostrEvent } from "@snort/system";
+import { EventExt, EventKind, NostrEvent, NostrLink, TaggedNostrEvent } from "@snort/system";
 import { NostrFileElement } from "@/Element/Event/NostrFileHeader";
 import ZapstrEmbed from "@/Element/Embed/ZapstrEmbed";
 import PubkeyList from "@/Element/Embed/PubkeyList";
@@ -13,6 +13,8 @@ import { LongFormText } from "./LongFormText";
 import ErrorBoundary from "@/Element/ErrorBoundary";
 import EventDB from "@/Cache/LokiDB";
 import useThreadFeed from "@/Feed/ThreadFeed";
+import { FormattedMessage } from "react-intl";
+import { Link } from "react-router-dom";
 
 export interface NoteProps {
   data?: TaggedNostrEvent;
@@ -68,7 +70,7 @@ function Replies({ id, showReplies, waitUntilInView }: { id: string; showReplies
 }
 
 export default function Note(props: NoteProps) {
-  const { id, className, showReplies, waitUntilInView, showRepliedMessage } = props;
+  const { id, className, showReplies, waitUntilInView, showRepliedMessage, highlight } = props;
 
   if (!id && !props.data) {
     throw new Error("Note: id or data is required");
@@ -83,12 +85,11 @@ export default function Note(props: NoteProps) {
     }
   }, [id, props.data]);
 
-  const replyingTo = useMemo(() => {
-    if (!ev) {
-      return undefined;
-    }
-    return ev.tags.find(t => t[0] === "e")?.[1];
-  }, [ev]);
+  const thread = useMemo(() => ev && EventExt.extractThread(ev), [ev]);
+
+  const rootLink = useMemo(() => {
+    return thread?.root?.value && NostrLink.fromTag(["e", thread.root.value]).encode(CONFIG.eventLinkPrefix);
+  }, [thread]);
 
   if (!ev) {
     return null;
@@ -135,8 +136,15 @@ export default function Note(props: NoteProps) {
 
   return (
     <>
-      {showRepliedMessage && replyingTo && (
-        <Note key={replyingTo} id={replyingTo} related={[]} waitUntilInView={waitUntilInView} />
+      {highlight && thread?.root && (
+        <div>
+          <Link to={`/${rootLink}`} className="mx-3">
+            <FormattedMessage defaultMessage="Show thread" id="MT6S6f" />
+          </Link>
+        </div>
+      )}
+      {showRepliedMessage && thread?.replyTo && (
+        <Note key={thread.replyTo.value} id={thread.replyTo.value} related={[]} waitUntilInView={waitUntilInView} />
       )}
       <ErrorBoundary>{content}</ErrorBoundary>
       {showReplies && <Replies id={ev.id} showReplies={showReplies} waitUntilInView={waitUntilInView} />}
