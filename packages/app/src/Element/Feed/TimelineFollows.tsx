@@ -97,7 +97,7 @@ const TimelineFollows = (props: TimelineFollowsProps) => {
   }, [feed]);
 
   const latestAuthors = useMemo(() => {
-    return dedupeByPubkey(feed).map(e => e.pubkey);
+    return dedupeByPubkey(latestFeed ?? []).map(e => e.pubkey);
   }, [latestFeed]);
 
   function onShowLatest(scrollToTop = false) {

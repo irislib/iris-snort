@@ -43,6 +43,7 @@ const Timeline = (props: TimelineProps) => {
   const feed: TimelineFeed = useTimelineFeed(props.subject, feedOptions);
   const displayAsInitial = props.displayAs ?? login.feedDisplayAs ?? "list";
   const [displayAs, setDisplayAs] = useState<DisplayAs>(displayAsInitial);
+  const [latest, setLatest] = useState(unixNow());
 
   const eventsFromLocalDB = useMemo(() => {
     return props.reqFilter ? EventDB.findArray(props.reqFilter) : [];
@@ -68,10 +69,14 @@ const Timeline = (props: TimelineProps) => {
   );
 
   const mainFeed = useMemo(() => {
-    return filterPosts(eventsFromLocalDB.length ? eventsFromLocalDB : feed.main ?? []);
+    return filterPosts(eventsFromLocalDB.length ? eventsFromLocalDB : feed.main ?? [])?.filter(
+      a => a.created_at <= latest,
+    );
   }, [feed, filterPosts, eventsFromLocalDB]);
   const latestFeed = useMemo(() => {
-    return filterPosts(feed.latest ?? []).filter(a => !mainFeed.some(b => b.id === a.id));
+    return filterPosts(eventsFromLocalDB.length ? eventsFromLocalDB : feed.main ?? [])?.filter(
+      a => a.created_at > latest,
+    );
   }, [feed, filterPosts]);
   const liveStreams = useMemo(() => {
     return (feed.main ?? []).filter(a => a.kind === EventKind.LiveEvent && findTag(a, "status") === "live");
@@ -82,7 +87,7 @@ const Timeline = (props: TimelineProps) => {
   }, [latestFeed]);
 
   function onShowLatest(scrollToTop = false) {
-    feed.showLatest();
+    setLatest(unixNow());
     if (scrollToTop) {
       window.scrollTo(0, 0);
     }
