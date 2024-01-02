@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import {NostrPrefix, parseNostrLink} from "@snort/system";
+import { NostrPrefix, parseNostrLink } from "@snort/system";
 import Note from "@/Element/Event/Note";
 
 export function ThreadRoute({ id }: { id?: string }) {
