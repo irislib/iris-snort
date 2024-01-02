@@ -1,5 +1,5 @@
 import "./Note.css";
-import { ReactNode } from "react";
+import { ReactNode, useMemo } from "react";
 import { EventKind, NostrEvent, NostrLink, TaggedNostrEvent } from "@snort/system";
 import { NostrFileElement } from "@/Element/Event/NostrFileHeader";
 import ZapstrEmbed from "@/Element/Embed/ZapstrEmbed";
@@ -20,12 +20,14 @@ export interface NoteProps {
   className?: string;
   related: readonly TaggedNostrEvent[];
   highlight?: boolean;
+  showReplies?: number;
   ignoreModeration?: boolean;
   onClick?: (e: TaggedNostrEvent) => void;
   depth?: number;
   searchedValue?: string;
   threadChains?: Map<string, Array<NostrEvent>>;
   context?: ReactNode;
+  showRepliedMessage?: boolean;
   waitUntilInView?: boolean;
   options?: {
     isRoot?: boolean;
@@ -47,29 +49,46 @@ export interface NoteProps {
   };
 }
 
-function Replies({ id }: { id: string }) {
+function Replies({ id, showReplies, waitUntilInView }: { id: string; showReplies: number; waitUntilInView?: boolean }) {
   useThreadFeed(NostrLink.fromTag(["e", id])); // maybe there's a better way to do the subscription?
-  const replies = EventDB.findArray({ kinds: [1], "#e": [id] });
+  const replies = EventDB.findArray({ kinds: [1], "#e": [id], limit: showReplies });
   return (
     <div className="flex flex-col">
       {replies.map((reply, index) => (
-        <Note key={reply.id} data={reply} related={[]} waitUntilInView={index > 10} />
+        <Note
+          key={reply.id}
+          data={reply}
+          related={[]}
+          waitUntilInView={waitUntilInView || index > 10}
+          showReplies={1}
+        />
       ))}
     </div>
   );
 }
 
 export default function Note(props: NoteProps) {
-  let ev = props.data;
-  const { id, className } = props;
+  const { id, className, showReplies, waitUntilInView, showRepliedMessage } = props;
 
-  if (!id && !ev) {
+  if (!id && !props.data) {
     throw new Error("Note: id or data is required");
   }
 
-  if (id) {
-    ev = EventDB.get(id);
-  }
+  const ev = useMemo(() => {
+    if (id) {
+      // TODO subscribe
+      return EventDB.get(id);
+    } else {
+      return props.data;
+    }
+  }, [id, props.data]);
+
+  const replyingTo = useMemo(() => {
+    if (!ev) {
+      return undefined;
+    }
+    return ev.tags.find(t => t[0] === "e")?.[1];
+  }, [ev]);
 
   if (!ev) {
     return null;
@@ -114,16 +133,13 @@ export default function Note(props: NoteProps) {
       content = <NoteInner {...props} data={ev} />;
   }
 
-  content = <ErrorBoundary>{content}</ErrorBoundary>;
-
-  if (props.options?.isRoot) {
-    return (
-      <div className="flex flex-col">
-        {content}
-        <Replies id={ev.id} />
-      </div>
-    );
-  }
-
-  return content;
+  return (
+    <>
+      {showRepliedMessage && replyingTo && (
+        <Note key={replyingTo} id={replyingTo} related={[]} waitUntilInView={waitUntilInView} />
+      )}
+      <ErrorBoundary>{content}</ErrorBoundary>
+      {showReplies && <Replies id={ev.id} showReplies={showReplies} waitUntilInView={waitUntilInView} />}
+    </>
+  );
 }
