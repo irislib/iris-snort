@@ -30,6 +30,7 @@ interface NostrSystemEvents {
   change: (state: SystemSnapshot) => void;
   auth: (challenge: string, relay: string, cb: (ev: NostrEvent) => void) => void;
   event: (ev: TaggedNostrEvent) => void;
+  request: (req: BuiltRawReqFilter) => void;
 }
 
 /**
@@ -317,6 +318,7 @@ export class NostrSystem extends EventEmitter<NostrSystemEvents> implements Syst
       }
       this.Queries.set(req.id, q);
       for (const subQ of filters) {
+        this.emit("request", subQ);
         this.SendQuery(q, subQ);
       }
       this.notifyChange();
