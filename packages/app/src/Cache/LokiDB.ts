@@ -76,8 +76,9 @@ class LokiDB {
       throw new Error("Invalid event");
     }
 
-    if ([0, 3].includes(event.kind)) {
-      // [0, 3] are not needed in memory
+    if (![1, 6].includes(event.kind)) {
+      // currently store only 1 and 6 for feeds.
+      // avoid especially 0, 3: they're already stored in FuzzySearch and SocialGraph
       return false;
     }
 

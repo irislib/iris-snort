@@ -204,7 +204,7 @@ class IndexedDB extends Dexie {
     await query.each(e => {
       const id = ID(e.id);
       if (this.seenEvents.has(id)) {
-        return;
+        return; // this shouldn't be done unless retrieved stuff is stored in memory?
       }
       this.seenEvents.add(id);
       systemHandleEvent(e);
