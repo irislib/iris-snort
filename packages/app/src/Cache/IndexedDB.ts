@@ -17,7 +17,7 @@ const systemHandleEvent = (event: TaggedNostrEvent) => {
   });
 };
 
-type SaveQueueEntry = { event: TaggedNostrEvent, tags: Tag[] };
+type SaveQueueEntry = { event: TaggedNostrEvent; tags: Tag[] };
 
 class IndexedDB extends Dexie {
   events!: Table<TaggedNostrEvent>;
@@ -78,29 +78,32 @@ class IndexedDB extends Dexie {
     this.seenEvents.add(id);
 
     // maybe we don't want event.kind 3 tags
-    const tags = event.kind === 3 ? [] :
-      event.tags
-        ?.filter((tag) => {
-          if (tag[0] === 'd') {
-            return true;
-          }
-          if (tag[0] === 'e') {
-            return true;
-          }
-          // we're only interested in p tags where we are mentioned
-          if (tag[0] === 'p') { // && Key.isMine(tag[1])) {
-            return true;
-          }
-          return false;
-        })
-        .map((tag) => ({
-          id: event.id.slice(0, 16) + '-' + tag[0].slice(0, 16) + '-' + tag[1].slice(0, 16),
-          eventId: event.id,
-          type: tag[0],
-          value: tag[1],
-        })) || [];
+    const tags =
+      event.kind === 3
+        ? []
+        : event.tags
+            ?.filter(tag => {
+              if (tag[0] === "d") {
+                return true;
+              }
+              if (tag[0] === "e") {
+                return true;
+              }
+              // we're only interested in p tags where we are mentioned
+              if (tag[0] === "p") {
+                // && Key.isMine(tag[1])) {
+                return true;
+              }
+              return false;
+            })
+            .map(tag => ({
+              id: event.id.slice(0, 16) + "-" + tag[0].slice(0, 16) + "-" + tag[1].slice(0, 16),
+              eventId: event.id,
+              type: tag[0],
+              value: tag[1],
+            })) || [];
 
-    this.saveQueue.push({event, tags});
+    this.saveQueue.push({ event, tags });
   }
 
   _throttle(func, limit) {
@@ -132,7 +135,7 @@ class IndexedDB extends Dexie {
     await this.events.where("id").anyOf(ids).each(systemHandleEvent);
   }, 1000);
 
-  subscribeToTags = this._throttle(async function() {
+  subscribeToTags = this._throttle(async function () {
     const tagPairs = [...this.subscribedTags].map(tag => tag.split("|"));
     this.subscribedTags.clear();
     await this.tags

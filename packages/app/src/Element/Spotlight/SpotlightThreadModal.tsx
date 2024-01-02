@@ -3,7 +3,7 @@ import { SpotlightMedia } from "@/Element/Spotlight/SpotlightMedia";
 import { NostrLink, TaggedNostrEvent } from "@snort/system";
 import getEventMedia from "@/Element/Event/getEventMedia";
 import Note from "@/Element/Event/Note";
-import EventDB from "@/Cache/LokiDB";
+import EventDB from "@/Cache/InMemoryDB";
 
 interface SpotlightThreadModalProps {
   thread?: NostrLink;

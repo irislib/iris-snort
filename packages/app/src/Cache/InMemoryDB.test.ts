@@ -1,16 +1,16 @@
 import { Event } from "nostr-tools";
 import { beforeEach, describe, expect, test } from "vitest";
 
-import EventDB from "./LokiDB";
+import { InMemoryDB } from "./InMemoryDB";
 
 import events from "../../../tests/events.json";
 
-describe("EventDB", () => {
-  let db: EventDB;
+describe("InMemoryDB", () => {
+  let db: InMemoryDB;
   let testEvent: Event;
 
   beforeEach(() => {
-    db = new EventDB();
+    db = new InMemoryDB();
 
     testEvent = events[0];
     db.handleEvent(testEvent);
@@ -62,32 +62,32 @@ describe("EventDB", () => {
   });
 });
 
-describe("EventDB find tests", () => {
-  let eventDB: EventDB;
+describe("InMemoryDB find tests", () => {
+  let inMemoryDB: InMemoryDB;
 
   beforeEach(() => {
-    eventDB = new EventDB();
+    inMemoryDB = new InMemoryDB();
     events.forEach(event => {
-      eventDB.handleEvent(event);
+      inMemoryDB.handleEvent(event);
     });
   });
 
   test("should find events by kind filter", () => {
-    const foundEvents = eventDB.findArray({ kinds: [4], limit: 10 });
+    const foundEvents = inMemoryDB.findArray({ kinds: [4], limit: 10 });
     expect(foundEvents.length).toEqual(10);
     expect(foundEvents.every(event => event.kind === 4)).toBe(true);
   });
 
   test("should find events by author filter", () => {
     const author = "4523be58d395b1b196a9b8c82b038b6895cb02b683d0c253a955068dba1facd0";
-    const foundEvents = eventDB.findArray({ authors: [author], limit: 10 });
+    const foundEvents = inMemoryDB.findArray({ authors: [author], limit: 10 });
     expect(foundEvents.length).toEqual(10);
     expect(foundEvents.every(event => event.pubkey === author)).toBe(true);
   });
 
   test("should find events by author and kind filter", () => {
     const author = "4523be58d395b1b196a9b8c82b038b6895cb02b683d0c253a955068dba1facd0";
-    const foundEvents = eventDB.findArray({
+    const foundEvents = inMemoryDB.findArray({
       authors: [author],
       kinds: [4],
       limit: 10,

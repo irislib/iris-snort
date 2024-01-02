@@ -11,7 +11,7 @@ import ProfilePreview from "@/Element/User/ProfilePreview";
 import { NoteInner } from "./NoteInner";
 import { LongFormText } from "./LongFormText";
 import ErrorBoundary from "@/Element/ErrorBoundary";
-import EventDB from "@/Cache/LokiDB";
+import EventDB from "@/Cache/InMemoryDB";
 import useThreadFeed from "@/Feed/ThreadFeed";
 import { FormattedMessage } from "react-intl";
 import { Link } from "react-router-dom";

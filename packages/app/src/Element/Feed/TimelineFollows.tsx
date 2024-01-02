@@ -13,7 +13,7 @@ import useLogin from "@/Hooks/useLogin";
 import { ShowMoreInView } from "@/Element/Event/ShowMore";
 import { TimelineRenderer } from "@/Element/Feed/TimelineRenderer";
 import { DisplayAs, DisplayAsSelector } from "@/Element/Feed/DisplayAsSelector";
-import EventDB from "@/Cache/LokiDB";
+import EventDB from "@/Cache/InMemoryDB";
 
 export interface TimelineFollowsProps {
   postsOnly: boolean;

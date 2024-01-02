@@ -13,7 +13,7 @@ type PackedNostrEvent = {
   relays: string[];
 };
 
-class LokiDB {
+class InMemoryDB {
   private loki = new loki("EventDB");
   private eventsCollection: Collection<PackedNostrEvent>;
 
@@ -182,4 +182,6 @@ class LokiDB {
   }
 }
 
-export default new LokiDB();
+export { InMemoryDB };
+
+export default new InMemoryDB();

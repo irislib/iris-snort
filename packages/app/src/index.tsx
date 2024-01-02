@@ -63,7 +63,7 @@ import { OnboardingRoutes } from "@/Pages/onboarding";
 import { setupWebLNWalletConfig } from "@/Wallet/WebLN";
 import { Wallets } from "@/Wallet";
 import NetworkGraph from "@/Pages/NetworkGraph";
-import LokiDB from "@/Cache/LokiDB";
+import LokiDB from "@/Cache/InMemoryDB";
 import indexedDB from "@/Cache/IndexedDB";
 import { addToFuzzySearch } from "@/FuzzySearch";
 

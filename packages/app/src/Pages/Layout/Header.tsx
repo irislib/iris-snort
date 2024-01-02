@@ -10,7 +10,7 @@ import { FormattedMessage } from "react-intl";
 import DisplayName from "@/Element/User/DisplayName";
 import useLogin from "@/Hooks/useLogin";
 import Icon from "@/Icons/Icon";
-import EventDB from "@/Cache/LokiDB";
+import EventDB from "@/Cache/InMemoryDB";
 
 export function Header() {
   const navigate = useNavigate();
