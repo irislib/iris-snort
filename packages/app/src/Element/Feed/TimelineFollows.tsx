@@ -1,5 +1,5 @@
 import "./Timeline.css";
-import { ReactNode, useCallback, useContext, useMemo, useState } from "react";
+import {ReactNode, useCallback, useContext, useMemo, useState, useSyncExternalStore} from "react";
 import { Link } from "react-router-dom";
 import { EventKind, NostrEvent, NostrLink, TaggedNostrEvent } from "@snort/system";
 import { unixNow } from "@snort/shared";
@@ -14,6 +14,8 @@ import { ShowMoreInView } from "@/Element/Event/ShowMore";
 import { TimelineRenderer } from "@/Element/Feed/TimelineRenderer";
 import { DisplayAs, DisplayAsSelector } from "@/Element/Feed/DisplayAsSelector";
 import EventDB from "@/Cache/LokiDB";
+import useTimelineFeed from "@/Feed/TimelineFeed";
+import useFollowsFeed from "@/Feed/FollowsFeed";
 
 export interface TimelineFollowsProps {
   postsOnly: boolean;
@@ -33,6 +35,10 @@ const TimelineFollows = (props: TimelineFollowsProps) => {
   const displayAsInitial = props.displayAs ?? login.feedDisplayAs ?? "list";
   const [displayAs, setDisplayAs] = useState<DisplayAs>(displayAsInitial);
   const [latest, setLatest] = useState(unixNow());
+  useSyncExternalStore( // for updates. todo: subscription system
+    cb => FollowsFeed.hook(cb, "*"),
+    () => FollowsFeed.snapshot(),
+  );
   const feed = EventDB.findArray({ kinds: [1], authors: login.follows.item, limit: 100, until: latest });
   const reactions = useReactions(
     "follows-feed-reactions",

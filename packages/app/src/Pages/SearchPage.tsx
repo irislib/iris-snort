@@ -66,7 +66,7 @@ const SearchPage = () => {
             items: [keyword + (sortPopular ? " sort:popular" : "")],
             discriminator: keyword,
           }}
-          reqFilter={{ search: keyword }}
+          reqFilter={{ search: keyword, kinds: [1] }}
           postsOnly={false}
           noSort={pf && sortPopular}
           method={"LIMIT_UNTIL"}

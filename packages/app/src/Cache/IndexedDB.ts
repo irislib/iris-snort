@@ -2,6 +2,19 @@ import Dexie, { Table } from "dexie";
 import { ID, TaggedNostrEvent, UID, ReqFilter as Filter } from "@snort/system";
 import { System } from "@/index";
 
+function throttle(func, limit) {
+  let inThrottle;
+  return function() {
+    const args = arguments;
+    const context = this;
+    if (!inThrottle) {
+      func.apply(context, args);
+      inThrottle = true;
+      setTimeout(() => (inThrottle = false), limit);
+    }
+  };
+}
+
 type Tag = {
   id: string;
   eventId: string;
@@ -9,7 +22,7 @@ type Tag = {
   value: string;
 };
 
-const handleEvent = (event: TaggedNostrEvent) => {
+const systemHandleEvent = (event: TaggedNostrEvent) => {
   /*😆*/
   requestAnimationFrame(() => {
     System.HandleEvent(event, { skipVerify: true });
@@ -22,6 +35,9 @@ class IndexedDB extends Dexie {
   private saveQueue: TaggedNostrEvent[] = [];
   private seenEvents = new Set<UID>();
   private seenFilters = new Set<string>();
+  private subscribedEventIds = new Set<string>();
+  private subscribedAuthors = new Set<string>();
+  private subscribedTags = new Set<string>();
 
   constructor() {
     super("EventDB");
@@ -37,7 +53,7 @@ class IndexedDB extends Dexie {
       .each(event => {
         this.seenEvents.add(ID(event.id));
         // TODO: system should get these via subscribe method
-        handleEvent(event);
+        systemHandleEvent(event);
       });
 
     this.startInterval();
@@ -91,6 +107,33 @@ class IndexedDB extends Dexie {
     this.saveQueue.push(event);
   }
 
+  subscribeToAuthors = throttle(async (limit?: number) => {
+    const authors = [...this.subscribedAuthors];
+    this.subscribedAuthors.clear();
+    await this.events
+      .where('pubkey')
+      .anyOf(authors)
+      .limit(limit || 1000)
+      .each(systemHandleEvent);
+  }, 1000);
+
+  subscribeToEventIds = throttle(async () => {
+    const ids = [...this.subscribedEventIds];
+    this.subscribedEventIds.clear();
+    await this.events.where('id').anyOf(ids).each(systemHandleEvent);
+  }, 1000);
+
+  subscribeToTags = throttle(async () => {
+    const tagPairs = [...this.subscribedTags].map((tag) => tag.split('|'));
+    this.subscribedTags.clear();
+    await this.tags
+      .where('[type+value]')
+      .anyOf(tagPairs)
+      .each((tag) => this.subscribedEventIds.add(tag.eventId));
+
+    await this.subscribeToEventIds();
+  }, 1000);
+
   async find(filter: Filter) {
     if (!filter) return;
 
@@ -137,18 +180,27 @@ class IndexedDB extends Dexie {
       return;
     }
 
-    let query = db.events;
+    let query = this.events;
     if (filter.kinds) {
       query = query.where("kind").anyOf(filter.kinds);
     }
     if (filter.search) {
-      query = query.filter((event: Event) => event.content?.includes(filter.search!));
+      const regexp = new RegExp(filter.search, "i");
+      query = query.filter((event: Event) => event.content?.match(regexp));
     }
     if (filter.limit) {
       query = query.limit(filter.limit);
     }
     // TODO test that the sort is actually working
-    await query.each(handleEvent);
+    await query.each((e) => {
+      const id = ID(e.id);
+      if (this.seenEvents.has(id)) {
+        return;
+      }
+      this.seenEvents.add(id);
+      console.log('found idb event', e.id, e.content?.slice(0, 20) || '');
+      systemHandleEvent(e);
+    });
   }
 }
 

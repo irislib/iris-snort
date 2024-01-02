@@ -76,6 +76,8 @@ export default function Note(props: NoteProps) {
     throw new Error("Note: id or data is required");
   }
 
+  const feed = useThreadFeed(NostrLink.fromTag(["e", id || props.data?.id || ""])); // for updates. todo: subscription system
+
   const ev = useMemo(() => {
     if (id) {
       // TODO subscribe
@@ -83,7 +85,7 @@ export default function Note(props: NoteProps) {
     } else {
       return props.data;
     }
-  }, [id, props.data]);
+  }, [id, props.data, feed]);
 
   const thread = useMemo(() => ev && EventExt.extractThread(ev), [ev]);
 

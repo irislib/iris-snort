@@ -125,22 +125,20 @@ System.on("event", ev => {
   // these should extend Actor class which schedules every handleEvent call with a setInterval queue
   // in order to not block the main thread?
   // maybe even handleMessage using nostr network messages, so Actors could even be workers?
+  LokiDB.handleEvent(ev);
   requestAnimationFrame(() => {
     // avoid blocking main thread
     addToFuzzySearch(ev);
     socialGraphInstance.handleEvent(ev);
-    LokiDB.handleEvent(ev);
     if (socialGraphInstance.getFollowDistance(ev.pubkey) <= 2) {
       indexedDB.handleEvent(ev);
     }
   });
 });
 
-/*
 System.on("request", req => {
-  indexedDB.find(req);
+  req.filters.forEach(filter => indexedDB.find(filter));
 });
- */
 
 async function fetchProfile(key: string) {
   try {

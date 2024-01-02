@@ -76,6 +76,11 @@ class LokiDB {
       throw new Error("Invalid event");
     }
 
+    if ([0, 3].includes(event.kind)) {
+      // [0, 3] are not needed in memory
+      return false;
+    }
+
     const id = ID(event.id);
     if (this.eventsCollection.by("id", id)) {
       return false; // this prevents updating event.relays?
@@ -83,13 +88,11 @@ class LokiDB {
 
     const packed = this.pack(event);
 
-    if (![0, 3].includes(event.kind)) {
-      // [0, 3] are not needed in memory
-      try {
-        this.eventsCollection.insert(packed);
-      } catch (e) {
-        return false;
-      }
+    // [0, 3] are not needed in memory
+    try {
+      this.eventsCollection.insert(packed);
+    } catch (e) {
+      return false;
     }
 
     return true;
