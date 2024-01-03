@@ -39,7 +39,6 @@ export function TimelineFragment(props: TimelineFragProps) {
               depth={0}
               onClick={props.noteOnClick}
               context={props.noteContext?.(e)}
-              waitUntilInView={props.index > 5}
               options={{
                 truncate: true,
               }}
