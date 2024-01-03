@@ -118,9 +118,7 @@ export const System = new NostrSystem({
 const worker = new IndexedDBWorker();
 const indexedDB = Comlink.wrap(worker);
 const systemHandleEvent = Comlink.proxy((e: TaggedNostrEvent) => {
-  requestAnimationFrame(() => {
-    System.HandleEvent(e);
-  })
+  System.HandleEvent(e);
 });
 indexedDB.getProfilesAndContactLists(systemHandleEvent);
 
@@ -137,14 +135,11 @@ System.on("event", (id, ev) => {
   // in order to not block the main thread?
   // maybe even handleMessage using nostr network messages, so Actors could even be workers?
   InMemoryDB.handleEvent(ev);
-  requestAnimationFrame(() => {
-    // avoid blocking main thread
-    addToFuzzySearch(ev);
-    socialGraphInstance.handleEvent(ev);
-    if (socialGraphInstance.getFollowDistance(ev.pubkey) <= 2) {
-      indexedDB.handleEvent(ev);
-    }
-  });
+  addToFuzzySearch(ev);
+  socialGraphInstance.handleEvent(ev);
+  if (socialGraphInstance.getFollowDistance(ev.pubkey) <= 2) {
+    indexedDB.handleEvent(ev);
+  }
 });
 
 System.on("request", req => {
