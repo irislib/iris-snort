@@ -37,7 +37,7 @@ import FollowsYou from "@/Element/User/FollowsYou";
 import QrCode from "@/Element/QrCode";
 import Modal from "@/Element/Modal";
 import BadgeList from "@/Element/User/BadgeList";
-import { ProxyImg } from "@/Element/ProxyImg";
+import ProxyImg from "@/Element/ProxyImg";
 import useHorizontalScroll from "@/Hooks/useHorizontalScroll";
 import { EmailRegex } from "@/Const";
 import useLogin from "@/Hooks/useLogin";

@@ -1,5 +1,5 @@
 import useImgProxy from "@/Hooks/useImgProxy";
-import React, { HTMLProps, ReactNode, forwardRef, useState, useMemo, useEffect } from "react";
+import React, {HTMLProps, ReactNode, forwardRef, useState, useMemo, useEffect, memo} from "react";
 import { FormattedMessage } from "react-intl";
 import { getUrlHostname } from "@/SnortUtils";
 
@@ -11,7 +11,7 @@ type ProxyImgProps = HTMLProps<HTMLImageElement> & {
   missingImageElement?: ReactNode;
 };
 
-export const ProxyImg = forwardRef<HTMLImageElement, ProxyImgProps>(
+const ProxyImg = forwardRef<HTMLImageElement, ProxyImgProps>(
   ({ size, className, promptToLoadDirectly, missingImageElement, sha256, ...props }: ProxyImgProps, ref) => {
     const { proxy } = useImgProxy();
     const [loadFailed, setLoadFailed] = useState(false);
@@ -63,3 +63,5 @@ export const ProxyImg = forwardRef<HTMLImageElement, ProxyImgProps>(
     );
   },
 );
+
+export default memo(ProxyImg);

@@ -2,7 +2,7 @@ import "./ZapstrEmbed.css";
 import { Link } from "react-router-dom";
 import { NostrEvent, NostrLink } from "@snort/system";
 
-import { ProxyImg } from "@/Element/ProxyImg";
+import ProxyImg from "@/Element/ProxyImg";
 import ProfileImage from "@/Element/User/ProfileImage";
 import { FormattedMessage } from "react-intl";
 

@@ -1,4 +1,4 @@
-import { ProxyImg } from "@/Element/ProxyImg";
+import ProxyImg from "@/Element/ProxyImg";
 import useImgProxy from "@/Hooks/useImgProxy";
 import { IMeta } from "@snort/system";
 import React, { CSSProperties, useEffect, useMemo, useRef } from "react";

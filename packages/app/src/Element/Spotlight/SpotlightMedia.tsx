@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Modal from "@/Element/Modal";
 import Icon from "@/Icons/Icon";
-import { ProxyImg } from "@/Element/ProxyImg";
+import ProxyImg from "@/Element/ProxyImg";
 import useImgProxy from "@/Hooks/useImgProxy";
 
 interface SpotlightMediaProps {

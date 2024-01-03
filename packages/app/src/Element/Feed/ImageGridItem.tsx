@@ -3,7 +3,7 @@ import { MouseEvent } from "react";
 import { Link } from "react-router-dom";
 import Icon from "@/Icons/Icon";
 import getEventMedia from "@/Element/Event/getEventMedia";
-import { ProxyImg } from "@/Element/ProxyImg";
+import ProxyImg from "@/Element/ProxyImg";
 
 const ImageGridItem = (props: { event: TaggedNostrEvent; onClick: (e: MouseEvent) => void }) => {
   const { event, onClick } = props;

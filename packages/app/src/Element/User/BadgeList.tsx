@@ -5,7 +5,7 @@ import { FormattedMessage } from "react-intl";
 
 import { TaggedNostrEvent } from "@snort/system";
 
-import { ProxyImg } from "@/Element/ProxyImg";
+import ProxyImg from "@/Element/ProxyImg";
 import Modal from "@/Element/Modal";
 import Username from "@/Element/User/Username";
 import { findTag } from "@/SnortUtils";

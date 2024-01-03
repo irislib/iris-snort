@@ -8,7 +8,7 @@ import Hashtag from "@/Element/Embed/Hashtag";
 import HyperText from "@/Element/Embed/HyperText";
 import CashuNuts from "@/Element/Embed/CashuNuts";
 import RevealMedia from "./Event/RevealMedia";
-import { ProxyImg } from "./ProxyImg";
+import ProxyImg from "./ProxyImg";
 import { SpotlightMediaModal } from "./Spotlight/SpotlightMedia";
 import HighlightedText from "./HighlightedText";
 import { useTextTransformer } from "@/Hooks/useTextTransformCache";
