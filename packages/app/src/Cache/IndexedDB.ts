@@ -43,7 +43,7 @@ class IndexedDB extends Dexie {
   }
 
   private startInterval() {
-    setInterval(() => {
+    const processQueue = async () => {
       if (this.saveQueue.length > 0) {
         try {
           const eventsToSave: TaggedNostrEvent[] = [];
@@ -52,15 +52,18 @@ class IndexedDB extends Dexie {
             eventsToSave.push(item.event);
             tagsToSave.push(...item.tags);
           }
-          this.events.bulkPut(eventsToSave);
-          this.tags.bulkPut(tagsToSave);
+          await this.events.bulkPut(eventsToSave);
+          await this.tags.bulkPut(tagsToSave);
         } catch (e) {
           console.error(e);
         } finally {
           this.saveQueue = [];
         }
       }
-    }, 1000);
+      setTimeout(() => processQueue(), 3000);
+    };
+
+    setTimeout(() => processQueue(), 3000);
   }
 
   handleEvent(event: TaggedNostrEvent) {
