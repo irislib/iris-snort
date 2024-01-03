@@ -31,6 +31,10 @@ class InMemoryDB {
     }
   }
 
+  has(id: string): boolean {
+    return !!this.eventsCollection.by("id", ID(id));
+  }
+
   // map to internal UIDs to save memory
   private pack(event: TaggedNostrEvent): PackedNostrEvent {
     return {

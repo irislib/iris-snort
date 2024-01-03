@@ -131,10 +131,16 @@ System.on("auth", async (c, r, cb) => {
   }
 });
 
+
+const seenEvents = new Set<string>();
 System.on("event", ev => {
   // these should extend Actor class which schedules every handleEvent call with a setInterval queue
   // in order to not block the main thread?
   // maybe even handleMessage using nostr network messages, so Actors could even be workers?
+  if (seenEvents.has(ev.id)) {
+    return;
+  }
+  seenEvents.add(ev.id);
   InMemoryDB.handleEvent(ev);
   requestAnimationFrame(() => {
     // avoid blocking main thread
