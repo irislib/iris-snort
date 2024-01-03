@@ -156,6 +156,9 @@
   "3KNMbJ": {
     "defaultMessage": "Articles"
   },
+  "3QwfJR": {
+    "defaultMessage": "~{amount}"
+  },
   "3cc4Ct": {
     "defaultMessage": "Light"
   },
@@ -450,6 +453,9 @@
   },
   "Dx4ey3": {
     "defaultMessage": "Toggle all"
+  },
+  "E5ZIPD": {
+    "defaultMessage": "<big>{amount}</big> <small>sats</small>"
   },
   "EJbFi7": {
     "defaultMessage": "Search notes"
@@ -944,9 +950,6 @@
   "VL900k": {
     "defaultMessage": "Recommended Relays"
   },
-  "VN0+Fz": {
-    "defaultMessage": "Balance: {amount} sats"
-  },
   "VOjC1i": {
     "defaultMessage": "Pick which upload service you want to upload attachments to"
   },
@@ -1128,10 +1131,6 @@
   },
   "d2ebEu": {
     "defaultMessage": "Not Subscribed to Push"
-  },
-  "d6CyG5": {
-    "defaultMessage": "History",
-    "description": "Wallet transation history"
   },
   "d7d0/x": {
     "defaultMessage": "LN Address"
@@ -1467,6 +1466,10 @@
   "puLNUJ": {
     "defaultMessage": "Pin"
   },
+  "pukxg/": {
+    "defaultMessage": "Payments",
+    "description": "Wallet transation history"
+  },
   "pzTOmv": {
     "defaultMessage": "Followers"
   },
@@ -1557,6 +1560,9 @@
   "thnRpU": {
     "defaultMessage": "Getting NIP-05 verified can help:"
   },
+  "tj6kdX": {
+    "defaultMessage": "{sign} {amount} sats"
+  },
   "tjpYlr": {
     "defaultMessage": "Relay Metrics"
   },
@@ -1616,9 +1622,6 @@
   },
   "voxBKC": {
     "defaultMessage": "Followed by friends"
-  },
-  "vrTOHJ": {
-    "defaultMessage": "{amount} sats"
   },
   "vxwnbh": {
     "defaultMessage": "Amount of work to apply to all published events"

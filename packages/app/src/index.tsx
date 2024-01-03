@@ -67,6 +67,7 @@ import NetworkGraph from "@/Pages/NetworkGraph";
 import InMemoryDB from "@/Cache/InMemoryDB";
 import IndexedDBWorker from "@/Cache/IndexedDB?worker";
 import { addToFuzzySearch } from "@/FuzzySearch";
+import WalletPage from "./Pages/WalletPage";
 
 declare global {
   interface Window {
@@ -268,6 +269,14 @@ const mainRoutes = [
   {
     path: "/graph",
     element: <NetworkGraph />,
+  },
+  {
+    path: "/wallet",
+    element: (
+      <div className="p">
+        <WalletPage showHistory={true} />
+      </div>
+    ),
   },
   ...OnboardingRoutes,
   ...SettingsRoutes,
