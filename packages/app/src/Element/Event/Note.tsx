@@ -49,6 +49,7 @@ export interface NoteProps {
     longFormPreview?: boolean;
     truncate?: boolean;
   };
+  waitUntilInView?: boolean;
 }
 
 function Replies({ id, showReplies, waitUntilInView }: { id: string; showReplies: number; waitUntilInView?: boolean }) {

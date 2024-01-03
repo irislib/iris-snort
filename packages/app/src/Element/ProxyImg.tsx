@@ -1,5 +1,5 @@
 import useImgProxy from "@/Hooks/useImgProxy";
-import React, {HTMLProps, ReactNode, forwardRef, useState, useMemo, useEffect, memo} from "react";
+import React, { HTMLProps, ReactNode, forwardRef, useState, useMemo, useEffect } from "react";
 import { FormattedMessage } from "react-intl";
 import { getUrlHostname } from "@/SnortUtils";
 
@@ -64,4 +64,4 @@ const ProxyImg = forwardRef<HTMLImageElement, ProxyImgProps>(
   },
 );
 
-export default memo(ProxyImg);
+export default ProxyImg;

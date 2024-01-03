@@ -13,7 +13,7 @@ export interface TimelineFragment {
 export interface TimelineFragProps {
   frag: TimelineFragment;
   related: Array<TaggedNostrEvent>;
-  index?: number;
+  index: number;
   noteRenderer?: (ev: TaggedNostrEvent) => ReactNode;
   noteOnClick?: (ev: TaggedNostrEvent) => void;
   noteContext?: (ev: TaggedNostrEvent) => ReactNode;
@@ -43,6 +43,7 @@ export function TimelineFragment(props: TimelineFragProps) {
               options={{
                 truncate: true,
               }}
+              waitUntilInView={props.index > 10}
             />
           ),
       )}
