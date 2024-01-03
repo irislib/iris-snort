@@ -64,7 +64,7 @@ import { OnboardingRoutes } from "@/Pages/onboarding";
 import { setupWebLNWalletConfig } from "@/Wallet/WebLN";
 import { Wallets } from "@/Wallet";
 import NetworkGraph from "@/Pages/NetworkGraph";
-import LokiDB from "@/Cache/InMemoryDB";
+import InMemoryDB from "@/Cache/InMemoryDB";
 import IndexedDBWorker from "@/Cache/IndexedDB?worker";
 import { addToFuzzySearch } from "@/FuzzySearch";
 
@@ -116,7 +116,12 @@ export const System = new NostrSystem({
 
 const worker = new IndexedDBWorker();
 const indexedDB = Comlink.wrap(worker);
-indexedDB.getProfilesAndContactLists(Comlink.proxy((e: TaggedNostrEvent) => System.HandleEvent(e)));
+const systemHandleEvent = Comlink.proxy((e: TaggedNostrEvent) => {
+  requestAnimationFrame(() => {
+    System.HandleEvent(e);
+  })
+});
+indexedDB.getProfilesAndContactLists(systemHandleEvent);
 
 System.on("auth", async (c, r, cb) => {
   const { id } = LoginStore.snapshot();
@@ -130,7 +135,7 @@ System.on("event", ev => {
   // these should extend Actor class which schedules every handleEvent call with a setInterval queue
   // in order to not block the main thread?
   // maybe even handleMessage using nostr network messages, so Actors could even be workers?
-  LokiDB.handleEvent(ev);
+  InMemoryDB.handleEvent(ev);
   requestAnimationFrame(() => {
     // avoid blocking main thread
     addToFuzzySearch(ev);
@@ -142,7 +147,7 @@ System.on("event", ev => {
 });
 
 System.on("request", req => {
-  req.filters.forEach(filter => indexedDB.find(filter, Comlink.proxy((e: TaggedNostrEvent) => System.HandleEvent(e))));
+  req.filters.forEach(filter => indexedDB.find(filter, systemHandleEvent));
 });
 
 async function fetchProfile(key: string) {
