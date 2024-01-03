@@ -1,6 +1,6 @@
 import Dexie, { Table } from "dexie";
-import { ID, TaggedNostrEvent, UID, ReqFilter as Filter } from "@snort/system";
-import { System } from "@/index";
+import { TaggedNostrEvent, ReqFilter as Filter } from "@snort/system";
+import * as Comlink from "comlink";
 
 type Tag = {
   id: string;
@@ -9,21 +9,13 @@ type Tag = {
   value: string;
 };
 
-const systemHandleEvent = (event: TaggedNostrEvent) => {
-  // requestAnimationFrame 😆
-  requestAnimationFrame(() => {
-    //console.log("found idb event", event.id, event.content?.slice(0, 20) || "");
-    System.HandleEvent(event, { skipVerify: true });
-  });
-};
-
 type SaveQueueEntry = { event: TaggedNostrEvent; tags: Tag[] };
 
 class IndexedDB extends Dexie {
   events!: Table<TaggedNostrEvent>;
   tags!: Table<Tag>;
   private saveQueue: SaveQueueEntry[] = [];
-  private seenEvents = new Set<UID>();
+  private seenEvents = new Set<string>();
   private seenFilters = new Set<string>();
   private subscribedEventIds = new Set<string>();
   private subscribedAuthors = new Set<string>();
@@ -37,16 +29,17 @@ class IndexedDB extends Dexie {
       tags: "id, eventId, [type+value]",
     });
 
+    this.startInterval();
+  }
+  
+  getProfilesAndContactLists(callback: (e: TaggedNostrEvent) => void) {
     this.events
       .where("kind")
       .anyOf([0, 3]) // load social graph and profiles. TODO: load other stuff on request
       .each(event => {
-        this.seenEvents.add(ID(event.id));
-        // TODO: system should get these via subscribe method
-        systemHandleEvent(event);
+        this.seenEvents.add(event.id);
+        callback(event);
       });
-
-    this.startInterval();
   }
 
   private startInterval() {
@@ -71,11 +64,10 @@ class IndexedDB extends Dexie {
   }
 
   handleEvent(event: TaggedNostrEvent) {
-    const id = ID(event.id);
-    if (this.seenEvents.has(id)) {
+    if (this.seenEvents.has(event.id)) {
       return;
     }
-    this.seenEvents.add(id);
+    this.seenEvents.add(event.id);
 
     // maybe we don't want event.kind 3 tags
     const tags =
@@ -119,23 +111,23 @@ class IndexedDB extends Dexie {
     };
   }
 
-  subscribeToAuthors = this._throttle(async function (limit?: number) {
+  subscribeToAuthors = this._throttle(async function (callback: (event: TaggedNostrEvent) => void, limit?: number) {
     const authors = [...this.subscribedAuthors];
     this.subscribedAuthors.clear();
     await this.events
       .where("pubkey")
       .anyOf(authors)
       .limit(limit || 1000)
-      .each(systemHandleEvent);
+      .each(callback);
   }, 1000);
 
-  subscribeToEventIds = this._throttle(async function () {
+  subscribeToEventIds = this._throttle(async function (callback: (event: TaggedNostrEvent) => void) {
     const ids = [...this.subscribedEventIds];
     this.subscribedEventIds.clear();
-    await this.events.where("id").anyOf(ids).each(systemHandleEvent);
+    await this.events.where("id").anyOf(ids).each(callback);
   }, 1000);
 
-  subscribeToTags = this._throttle(async function () {
+  subscribeToTags = this._throttle(async function (callback: (event: TaggedNostrEvent) => void) {
     const tagPairs = [...this.subscribedTags].map(tag => tag.split("|"));
     this.subscribedTags.clear();
     await this.tags
@@ -143,10 +135,10 @@ class IndexedDB extends Dexie {
       .anyOf(tagPairs)
       .each(tag => this.subscribedEventIds.add(tag.eventId));
 
-    await this.subscribeToEventIds();
+    await this.subscribeToEventIds(callback);
   }, 1000);
 
-  async find(filter: Filter) {
+  async find(filter: Filter, callback: (event: TaggedNostrEvent) => void): Promise<void> {
     if (!filter) return;
 
     const stringifiedFilter = JSON.stringify(filter);
@@ -205,14 +197,15 @@ class IndexedDB extends Dexie {
     }
     // TODO test that the sort is actually working
     await query.each(e => {
-      const id = ID(e.id);
-      if (this.seenEvents.has(id)) {
+      if (this.seenEvents.has(e.id)) {
         return; // this shouldn't be done unless retrieved stuff is stored in memory?
       }
-      this.seenEvents.add(id);
-      systemHandleEvent(e);
+      this.seenEvents.add(e.id);
+      callback(e);
     });
   }
 }
 
-export default new IndexedDB();
+const db = new IndexedDB();
+
+Comlink.expose(db);

@@ -13,6 +13,7 @@ import {
 } from "@snort/system-wasm";
 import WasmPath from "@snort/system-wasm/pkg/system_wasm_bg.wasm";
 
+import * as Comlink from "comlink";
 import { StrictMode } from "react";
 import * as ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouteObject, RouterProvider } from "react-router-dom";
@@ -27,7 +28,7 @@ import {
   mapEventToProfile,
   PowWorker,
   encodeTLVEntries,
-  socialGraphInstance,
+  socialGraphInstance, TaggedNostrEvent,
 } from "@snort/system";
 import PowWorkerURL from "@snort/system/src/pow-worker.ts?worker&url";
 import { SnortContext } from "@snort/system-react";
@@ -64,7 +65,7 @@ import { setupWebLNWalletConfig } from "@/Wallet/WebLN";
 import { Wallets } from "@/Wallet";
 import NetworkGraph from "@/Pages/NetworkGraph";
 import LokiDB from "@/Cache/InMemoryDB";
-import indexedDB from "@/Cache/IndexedDB";
+import IndexedDBWorker from "@/Cache/IndexedDB?worker";
 import { addToFuzzySearch } from "@/FuzzySearch";
 
 declare global {
@@ -113,6 +114,10 @@ export const System = new NostrSystem({
   db: SystemDb,
 });
 
+const worker = new IndexedDBWorker();
+const indexedDB = Comlink.wrap(worker);
+indexedDB.getProfilesAndContactLists(Comlink.proxy((e: TaggedNostrEvent) => System.HandleEvent(e)));
+
 System.on("auth", async (c, r, cb) => {
   const { id } = LoginStore.snapshot();
   const pub = LoginStore.getPublisher(id);
@@ -137,7 +142,7 @@ System.on("event", ev => {
 });
 
 System.on("request", req => {
-  req.filters.forEach(filter => indexedDB.find(filter));
+  req.filters.forEach(filter => indexedDB.find(filter, Comlink.proxy((e: TaggedNostrEvent) => System.HandleEvent(e))));
 });
 
 async function fetchProfile(key: string) {
